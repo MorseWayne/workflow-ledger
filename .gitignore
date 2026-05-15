@@ -1,0 +1,7 @@
+# workflow-ledger
+
+Generated local artifacts and editor files.
+
+.DS_Store
+*.swp
+*.tmp
