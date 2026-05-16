@@ -55,6 +55,18 @@ That is valuable for large feature work, but too heavy for everyday Claude Code 
 | Hooks-first automation | Deterministic enforcement | Can become noisy and rigid | Use hooks as optional guardrails, not the workflow engine |
 | `workflow-ledger` | Durable, lightweight, reviewable | Requires updating one ledger file at milestones | Default for recoverable Claude Code work |
 
+## Compared with specific tools
+
+| Tool / workflow | Best at | Typical shape | Where `workflow-ledger` differs |
+|---|---|---|---|
+| Superpowers-style skills | Teaching Claude repeatable behaviors through reusable skills and checklists | Skill packs with detailed procedures, design/planning loops, and explicit human approval gates | Uses the same skill-native delivery model, but narrows the scope to task memory: one ledger, phase state, resume points, and review summaries |
+| GSD-style planning workflows | Breaking large work into researched phases with verification, security, UI, or evaluation reviews | Multi-agent planning and execution, phase documents, review reports, and stronger process gates | Keeps the recoverability pattern but removes most ceremony for day-to-day work; heavyweight review artifacts stay optional Level 3 attachments |
+| OpenSpec-style spec workflows | Governing product or API changes with proposals, specs, tasks, and archival history | Formal proposal/design/task files with a spec lifecycle | Borrows explicit phases and acceptance thinking, but avoids making every change start with a proposal directory |
+| Claude Code hooks | Deterministically enforcing a rule at tool or lifecycle boundaries | Event handlers for commands such as pre-tool, post-tool, stop, or compact | Treats hooks as optional guardrails; the workflow state remains human-readable in `.claude/WORKFLOW.md` |
+| TodoWrite / session todos | Managing what Claude is doing right now | In-session checklist that is easy to update frequently | Uses TodoWrite for live execution only; the ledger stores durable milestones and handoff context |
+
+In short: Superpowers teaches behaviors, GSD coordinates heavier execution, OpenSpec governs formal changes, hooks enforce events, and TodoWrite tracks the current session. `workflow-ledger` is the smaller missing layer between them: persistent task memory for everyday Claude Code development.
+
 ## Inspired by existing workflows
 
 `workflow-ledger` borrows ideas from spec-driven and skill-driven workflows, but intentionally stays smaller.
@@ -69,16 +81,28 @@ The key design decision is simple:
 
 ## Install
 
-Copy or symlink the skill into your Claude Code skills directory.
+From the root of the project you want to configure, run:
 
-Project-local install:
+```bash
+curl -fsSL https://raw.githubusercontent.com/MorseWayne/workflow-ledger/main/install.sh | bash
+```
+
+This installs the skill, appends the `CLAUDE.md` snippet if it is missing, and creates `.claude/WORKFLOW.md` if it does not already exist.
+
+If you already have a local checkout of `workflow-ledger`, you can run the installer directly:
+
+```bash
+/path/to/workflow-ledger/install.sh /path/to/your/project
+```
+
+Manual project-local install:
 
 ```bash
 mkdir -p .claude/skills
 cp -R skills/workflow-ledger .claude/skills/workflow-ledger
 ```
 
-Personal install:
+Personal install only installs the skill; project setup still needs the `CLAUDE.md` snippet and `.claude/WORKFLOW.md`:
 
 ```bash
 mkdir -p ~/.claude/skills
@@ -95,7 +119,17 @@ Then invoke it in Claude Code:
 
 ## Project setup
 
-Add the snippet from [examples/claude-project/CLAUDE.md.snippet](examples/claude-project/CLAUDE.md.snippet) to your project's `CLAUDE.md`.
+A project needs three pieces:
+
+1. Install the skill into `.claude/skills/workflow-ledger`.
+2. Add the workflow rules snippet to the project's `CLAUDE.md` so Claude has a short, always-loaded reminder to use the skill and ledger.
+3. Create `.claude/WORKFLOW.md` from the template.
+
+Add the snippet from [examples/claude-project/CLAUDE.md.snippet](examples/claude-project/CLAUDE.md.snippet) to your project's `CLAUDE.md`:
+
+```bash
+cat examples/claude-project/CLAUDE.md.snippet >> CLAUDE.md
+```
 
 Create a project ledger from [skills/workflow-ledger/templates/WORKFLOW.md](skills/workflow-ledger/templates/WORKFLOW.md):
 

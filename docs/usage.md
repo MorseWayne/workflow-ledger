@@ -2,13 +2,33 @@
 
 ## Install into a project
 
+From the root of the project you want to configure, run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/MorseWayne/workflow-ledger/main/install.sh | bash
+```
+
+The installer is idempotent:
+
+- copies the skill to `.claude/skills/workflow-ledger`
+- appends the `CLAUDE.md` snippet only if the Workflow Ledger section is missing
+- creates `.claude/WORKFLOW.md` only if it does not already exist
+
+If you already have a local checkout:
+
+```bash
+/path/to/workflow-ledger/install.sh /path/to/your/project
+```
+
+Manual install has three required project-local steps: copy the skill, add the `CLAUDE.md` snippet, and create the ledger file.
+
 ```bash
 mkdir -p .claude/skills .claude
 cp -R /path/to/workflow-ledger/skills/workflow-ledger .claude/skills/workflow-ledger
 cp /path/to/workflow-ledger/skills/workflow-ledger/templates/WORKFLOW.md .claude/WORKFLOW.md
 ```
 
-Add the CLAUDE.md snippet:
+Add the `CLAUDE.md` snippet so Claude has an always-loaded reminder to use the skill for Level 2/3 work:
 
 ```bash
 cat /path/to/workflow-ledger/examples/claude-project/CLAUDE.md.snippet >> CLAUDE.md

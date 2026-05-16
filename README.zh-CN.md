@@ -53,6 +53,18 @@
 | hook 自动化 | 确定性强 | 容易变吵、变硬 | 作为可选保险丝，不作为主流程 |
 | `workflow-ledger` | 轻量、可恢复、可验收 | 需要在里程碑节点更新一个文件 | 默认用于需要恢复的 Claude Code 开发任务 |
 
+## 和具体工具的横向对比
+
+| 工具 / 工作流 | 最擅长 | 常见形态 | `workflow-ledger` 的区别 |
+|---|---|---|---|
+| Superpowers 风格 skills | 用可复用 skill 和 checklist 教 Claude 按固定方式工作 | skill 包、详细流程、设计/计划循环、明确的人类批准门 | 采用同样的 skill-native 交付方式，但范围更窄：只解决任务记忆、阶段状态、恢复点和 review 摘要 |
+| GSD 风格规划工作流 | 把大型工作拆成调研、计划、执行、验证、安全/UI/eval review 等阶段 | 多 agent 规划与执行、阶段文档、review 报告、更强流程门禁 | 借鉴可恢复和分阶段思路，但把日常任务的仪式感降到最低；重型 review 产物只作为 Level 3 可选附件 |
+| OpenSpec 风格 spec 工作流 | 用 proposal、spec、tasks 和归档历史治理产品/API 变化 | 正式 proposal/design/task 文件和 spec 生命周期 | 借鉴阶段和验收意识，但不要求每个改动都从 proposal 目录开始 |
+| Claude Code hooks | 在工具调用或生命周期边界确定性执行规则 | PreToolUse、PostToolUse、Stop、Compact 等事件处理器 | 把 hooks 视为可选保险丝；工作流状态仍放在可读的 `.claude/WORKFLOW.md` 中 |
+| TodoWrite / 会话 todo | 管理 Claude 当前会话正在做什么 | 当前会话内频繁更新的 checklist | TodoWrite 只负责现场执行；ledger 负责持久里程碑和交接上下文 |
+
+一句话概括：Superpowers 教行为，GSD 编排重型执行，OpenSpec 治理正式变更，hooks 强制事件规则，TodoWrite 跟踪当前会话。`workflow-ledger` 补的是中间那一层：日常 Claude Code 开发里的持久任务记忆。
+
 ## 借鉴了哪些思路
 
 `workflow-ledger` 借鉴了 spec-driven 和 skill-driven 工作流，但刻意保持更小：
@@ -67,16 +79,28 @@
 
 ## 安装
 
-复制或软链接 skill 到 Claude Code skills 目录。
+在你要接入的项目根目录运行：
 
-项目级安装：
+```bash
+curl -fsSL https://raw.githubusercontent.com/MorseWayne/workflow-ledger/main/install.sh | bash
+```
+
+这条命令会安装 skill、在缺失时追加 `CLAUDE.md` 片段，并在缺失时创建 `.claude/WORKFLOW.md`。
+
+如果你已经有本地 `workflow-ledger` checkout，也可以直接运行安装脚本：
+
+```bash
+/path/to/workflow-ledger/install.sh /path/to/your/project
+```
+
+手动项目级安装：
 
 ```bash
 mkdir -p .claude/skills
 cp -R skills/workflow-ledger .claude/skills/workflow-ledger
 ```
 
-个人全局安装：
+个人全局安装只安装 skill；项目仍然需要 `CLAUDE.md` 片段和 `.claude/WORKFLOW.md`：
 
 ```bash
 mkdir -p ~/.claude/skills
@@ -93,7 +117,17 @@ cp -R skills/workflow-ledger ~/.claude/skills/workflow-ledger
 
 ## 项目接入
 
-把 [examples/claude-project/CLAUDE.md.snippet](examples/claude-project/CLAUDE.md.snippet) 加到项目的 `CLAUDE.md`。
+一个项目需要三部分：
+
+1. 把 skill 安装到 `.claude/skills/workflow-ledger`。
+2. 把工作流规则片段加入项目 `CLAUDE.md`，让 Claude 始终能看到一段简短强制提醒：什么时候使用 skill 和 ledger。
+3. 从模板创建 `.claude/WORKFLOW.md`。
+
+把 [examples/claude-project/CLAUDE.md.snippet](examples/claude-project/CLAUDE.md.snippet) 加到项目的 `CLAUDE.md`：
+
+```bash
+cat examples/claude-project/CLAUDE.md.snippet >> CLAUDE.md
+```
 
 从模板创建项目台账：
 

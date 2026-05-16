@@ -9,6 +9,22 @@ argument-hint: start|resume|update|close [task]
 
 Use this skill to keep development work traceable and recoverable while staying lightweight.
 
+## Project installation contract
+
+Recommended one-command project setup from the target project root:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/MorseWayne/workflow-ledger/main/install.sh | bash
+```
+
+For project-local use, the installer configures all three pieces:
+
+1. Copy this skill to `.claude/skills/workflow-ledger`.
+2. Add [examples/claude-project/CLAUDE.md.snippet](../../examples/claude-project/CLAUDE.md.snippet) to the project's `CLAUDE.md` if missing.
+3. Create `.claude/WORKFLOW.md` from [templates/WORKFLOW.md](templates/WORKFLOW.md) if missing.
+
+The `CLAUDE.md` snippet is important because skill auto-loading is not guaranteed. Keep mandatory reminders short in `CLAUDE.md`, and keep detailed procedure here in the skill.
+
 ## Core rule
 
 Maintain one project overview file at `.claude/WORKFLOW.md` for Level 2/3 work and for any task the user wants tracked. Do not create per-task files by default.
