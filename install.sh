@@ -7,7 +7,11 @@ MARKER="## Workflow Ledger"
 TARGET_DIR="${1:-$PWD}"
 
 TARGET_DIR="$(cd "$TARGET_DIR" && pwd)"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_PATH="${BASH_SOURCE[0]-}"
+SCRIPT_DIR=""
+if [ -n "$SCRIPT_PATH" ] && [ "$SCRIPT_PATH" != "bash" ] && [ "$SCRIPT_PATH" != "-" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+fi
 
 cleanup_dir=""
 cleanup() {
