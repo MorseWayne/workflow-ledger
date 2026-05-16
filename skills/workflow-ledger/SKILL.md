@@ -42,6 +42,19 @@ Classify first. If uncertain, choose the lighter level unless risk appears.
 
 Escalate when you discover cross-file behavior changes, public API changes, failed validation, unclear requirements, or HIGH/CRITICAL impact.
 
+
+## Anti-rationalization rules
+
+Do not skip ledger work by rationalizing that the current change is small or almost done.
+
+| Rationalization | Required behavior |
+|---|---|
+| This is too small for the ledger | Classify first; Level 2/3 must be tracked |
+| I will update the ledger at the end | Update at phase completion, blockers, key decisions, and handoff points |
+| Tests passed, so the phase is done | Record validation evidence and remaining gaps before marking Done |
+| TodoWrite is enough | TodoWrite is session-local; the ledger is cross-session state |
+| Formatting does not matter | Preserve stable fields so `doctor` can check the ledger |
+
 ## Ledger structure
 
 `.claude/WORKFLOW.md` should contain:
@@ -87,15 +100,15 @@ Only completed phases need `Acceptance / Review`. For blocked phases, write `Blo
 
 ## Acceptance / Review
 
-When a phase is marked Done, record a short summary directly under that phase.
+Before a phase is marked Done, record a short summary directly under that phase. A phase with failed validation must remain `In Progress` or `Blocked`.
 
 - **Review**: what was reviewed or confirmed.
 - **Validation**: commands/checks/manual validation performed.
 - **GitNexus**: impact/detect/query results, or why not applicable.
-- **Tests**: tests run or why omitted.
-- **Gaps**: known unresolved items, deferred work, or risks.
+- **Tests**: tests run, exact commands, or why omitted.
+- **Gaps**: explicitly `None` or known unresolved items, deferred work, or risks.
 
-Keep it summary-level. Do not write a transcript.
+Keep it summary-level. Do not write a transcript. `Validation` and `Tests` must name actual checks or explain why they do not apply.
 
 ## Dependency and discovered-task rules
 

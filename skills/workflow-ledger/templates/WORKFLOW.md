@@ -4,6 +4,14 @@ A lightweight milestone ledger for Claude Code development work.
 
 ## Active
 
+<!-- workflow-ledger:task
+id: WF-YYYY-MM-DD-001
+level: 2
+status: In Progress
+current_phase: Phase 1 — Name
+updated: YYYY-MM-DD
+-->
+
 ### WF-YYYY-MM-DD-001 — Task title
 Status: In Progress
 Level: 2
@@ -26,6 +34,13 @@ Depends on:
 Tasks:
 - [ ] First current-phase task
 - [ ] Second current-phase task
+
+Acceptance / Review:
+- Review: N/A until this phase is complete.
+- Validation: N/A until this phase is complete.
+- GitNexus: N/A until this phase is complete.
+- Tests: N/A until this phase is complete.
+- Gaps: N/A until this phase is complete.
 
 Resume next:
 - Continue from the first unchecked task in this phase.

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -u
+
+ledger=".claude/WORKFLOW.md"
+cli=".claude/bin/workflow-ledger"
+
+if [ ! -f "$ledger" ]; then
+  exit 0
+fi
+
+printf 'Workflow Ledger detected.\n'
+printf -- '- Read .claude/WORKFLOW.md before resuming tracked work.\n'
+printf -- '- Check Active tasks, Current phase, and Resume next.\n'
+
+if [ -x "$cli" ]; then
+  printf -- '- Run .claude/bin/workflow-ledger doctor if state may be stale.\n'
+else
+  printf -- '- Run workflow-ledger doctor if the project CLI is available.\n'
+fi
+
+exit 0

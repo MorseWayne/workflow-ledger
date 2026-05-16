@@ -34,6 +34,24 @@ Add the `CLAUDE.md` snippet so Claude has an always-loaded reminder to use the s
 cat /path/to/workflow-ledger/examples/claude-project/CLAUDE.md.snippet >> CLAUDE.md
 ```
 
+## CLI guardrails
+
+After installation, you can run the project-local CLI:
+
+```bash
+.claude/bin/workflow-ledger doctor
+.claude/bin/workflow-ledger list
+.claude/bin/workflow-ledger hooks status
+```
+
+Install optional advisory hooks only when you want SessionStart reminders:
+
+```bash
+.claude/bin/workflow-ledger hooks install
+```
+
+The CLI is a guardrail and summary tool. Claude still uses the `workflow-ledger` skill for the actual workflow.
+
 ## Start tracking work
 
 In Claude Code:

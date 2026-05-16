@@ -25,7 +25,7 @@ skill 指导 Claude：
 - 默认不为每个任务创建独立文件。
 - 不强制创建 proposal / design / tasks 文档。
 - 不强制使用 hook 自动化。
-- 第一版不提供 CLI。
+- 不引入重型 CLI 运行时或包管理器；可选 CLI 保持零依赖、项目本地。
 
 ## 文件模型
 

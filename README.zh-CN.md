@@ -107,6 +107,15 @@ mkdir -p ~/.claude/skills
 cp -R skills/workflow-ledger ~/.claude/skills/workflow-ledger
 ```
 
+安装器也会把项目本地 CLI 复制到 `.claude/bin/workflow-ledger`：
+
+```bash
+.claude/bin/workflow-ledger doctor
+.claude/bin/workflow-ledger list
+```
+
+详见 [docs/cli.md](docs/cli.md)。CLI 是可选保护栏，不替代 skill 工作流。
+
 然后在 Claude Code 中调用：
 
 ```text

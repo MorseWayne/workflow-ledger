@@ -109,6 +109,15 @@ mkdir -p ~/.claude/skills
 cp -R skills/workflow-ledger ~/.claude/skills/workflow-ledger
 ```
 
+The installer also copies a project-local CLI to `.claude/bin/workflow-ledger`:
+
+```bash
+.claude/bin/workflow-ledger doctor
+.claude/bin/workflow-ledger list
+```
+
+See [docs/cli.md](docs/cli.md) for command details. The CLI is an optional guardrail; it does not replace the skill workflow.
+
 Then invoke it in Claude Code:
 
 ```text

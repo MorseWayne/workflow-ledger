@@ -23,7 +23,7 @@ The skill teaches Claude how to:
 - No per-task file by default.
 - No mandatory proposal/design/tasks documents.
 - No mandatory hook automation.
-- No CLI in the first version.
+- No heavyweight CLI runtime or package manager; the optional CLI stays zero-dependency and project-local.
 
 ## File model
 
