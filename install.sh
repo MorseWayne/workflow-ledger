@@ -38,7 +38,7 @@ if [ ! -d "$SOURCE_DIR/skills/workflow-ledger" ] || [ ! -f "$SOURCE_DIR/examples
 fi
 
 if command -v node >/dev/null 2>&1 && [ -f "$SOURCE_DIR/bin/workflow-ledger.js" ]; then
-  node "$SOURCE_DIR/bin/workflow-ledger.js" setup --tool claude-code --root "$TARGET_DIR"
+  node "$SOURCE_DIR/bin/workflow-ledger.js" init --tool claude-code --root "$TARGET_DIR"
 else
   mkdir -p "$TARGET_DIR/.claude/skills" "$TARGET_DIR/.claude" "$TARGET_DIR/.claude/bin"
   rm -rf "$TARGET_DIR/.claude/skills/workflow-ledger"

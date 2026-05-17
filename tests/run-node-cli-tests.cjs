@@ -7,6 +7,8 @@ const { spawnSync } = require('child_process');
 const repoRoot = path.resolve(__dirname, '..');
 const cli = path.join(repoRoot, 'bin', 'workflow-ledger.js');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'workflow-ledger-node-'));
+const home = path.join(tmp, 'home');
+fs.mkdirSync(home, { recursive: true });
 
 function fail(message) {
   console.error(`not ok - ${message}`);
@@ -18,46 +20,61 @@ function pass(message) {
   console.log(`ok - ${message}`);
 }
 
-function run(args, cwd) {
+function run(args, cwd, extraEnv = {}) {
   return spawnSync(process.execPath, [cli, ...args], {
     cwd,
     encoding: 'utf8',
-    env: { ...process.env, WORKFLOW_LEDGER_ROOT: cwd },
+    env: { ...process.env, HOME: home, WORKFLOW_LEDGER_ROOT: cwd, ...extraEnv },
   });
 }
 
-let root = path.join(tmp, 'claude-code');
+let root = path.join(tmp, 'setup-missing-tools');
 fs.mkdirSync(root, { recursive: true });
-let result = run(['setup', '--tool', 'claude-code'], root);
-if (result.status !== 0) fail('claude-code setup exits 0');
-if (!fs.existsSync(path.join(root, '.claude', 'WORKFLOW.md'))) fail('claude-code setup creates ledger');
-if (!fs.existsSync(path.join(root, '.claude', 'skills', 'workflow-ledger', 'SKILL.md'))) fail('claude-code setup installs skill');
-if (!fs.existsSync(path.join(root, '.claude', 'bin', 'workflow-ledger'))) fail('claude-code setup installs local CLI');
-if (!fs.readFileSync(path.join(root, 'CLAUDE.md'), 'utf8').includes('## Workflow Ledger')) fail('claude-code setup updates CLAUDE.md');
-pass('claude-code setup installs project files');
+let result = run(['setup', '--tool', 'all'], root);
+if (result.status !== 0) fail('setup exits 0 when tools are missing');
+if (!result.stdout.includes('Claude Code (not installed)')) fail('setup reports missing Claude Code');
+if (!result.stdout.includes('Codex (not installed)')) fail('setup reports missing Codex');
+pass('setup skips missing global tools');
 
-result = run(['setup', '--tool', 'claude-code'], root);
-if (result.status !== 0) fail('claude-code setup is idempotent');
-if (!result.stdout.includes('kept existing .claude/WORKFLOW.md')) fail('claude-code setup keeps existing ledger');
-pass('claude-code setup is idempotent');
-
-root = path.join(tmp, 'codex');
-fs.mkdirSync(root, { recursive: true });
-result = run(['setup', '--tool', 'codex'], root);
-if (result.status !== 0) fail('codex setup exits 0');
-if (!fs.existsSync(path.join(root, '.workflow-ledger', 'WORKFLOW.md'))) fail('codex setup creates shared ledger');
-if (!fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8').includes('# Workflow Ledger')) fail('codex setup updates AGENTS.md');
-pass('codex setup installs project files');
-
-root = path.join(tmp, 'all');
-fs.mkdirSync(root, { recursive: true });
+fs.mkdirSync(path.join(home, '.claude'), { recursive: true });
+fs.mkdirSync(path.join(home, '.codex'), { recursive: true });
 result = run(['setup', '--tool', 'all'], root);
-if (result.status !== 0) fail('all setup exits 0');
-if (!fs.existsSync(path.join(root, '.claude', 'WORKFLOW.md'))) fail('all setup creates Claude Code ledger');
-if (!fs.existsSync(path.join(root, '.workflow-ledger', 'WORKFLOW.md'))) fail('all setup creates Codex ledger');
-pass('all setup installs both adapters');
+if (result.status !== 0) fail('setup exits 0 with detected tools');
+if (!fs.existsSync(path.join(home, '.claude', 'skills', 'workflow-ledger', 'SKILL.md'))) fail('setup installs global Claude Code skill');
+if (!fs.existsSync(path.join(home, '.claude', 'bin', 'workflow-ledger'))) fail('setup installs global Claude Code CLI');
+if (!fs.existsSync(path.join(home, '.agents', 'skills', 'workflow-ledger', 'SKILL.md'))) fail('setup installs global Codex skill');
+pass('setup installs global tool integrations');
 
-result = run(['doctor'], path.join(tmp, 'claude-code'));
+root = path.join(tmp, 'claude-code-project');
+fs.mkdirSync(root, { recursive: true });
+result = run(['init', '--tool', 'claude-code'], root);
+if (result.status !== 0) fail('claude-code init exits 0');
+if (!fs.existsSync(path.join(root, '.claude', 'WORKFLOW.md'))) fail('claude-code init creates ledger');
+if (!fs.readFileSync(path.join(root, 'CLAUDE.md'), 'utf8').includes('## Workflow Ledger')) fail('claude-code init updates CLAUDE.md');
+pass('claude-code init installs project files');
+
+result = run(['init', '--tool', 'claude-code'], root);
+if (result.status !== 0) fail('claude-code init is idempotent');
+if (!result.stdout.includes('kept existing .claude/WORKFLOW.md')) fail('claude-code init keeps existing ledger');
+pass('claude-code init is idempotent');
+
+root = path.join(tmp, 'codex-project');
+fs.mkdirSync(root, { recursive: true });
+result = run(['init', '--tool', 'codex'], root);
+if (result.status !== 0) fail('codex init exits 0');
+if (!fs.existsSync(path.join(root, '.workflow-ledger', 'WORKFLOW.md'))) fail('codex init creates shared ledger');
+if (!fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8').includes('# Workflow Ledger')) fail('codex init updates AGENTS.md');
+pass('codex init installs project files');
+
+root = path.join(tmp, 'all-project');
+fs.mkdirSync(root, { recursive: true });
+result = run(['init', '--tool', 'all'], root);
+if (result.status !== 0) fail('all init exits 0');
+if (!fs.existsSync(path.join(root, '.claude', 'WORKFLOW.md'))) fail('all init creates Claude Code ledger');
+if (!fs.existsSync(path.join(root, '.workflow-ledger', 'WORKFLOW.md'))) fail('all init creates Codex ledger');
+pass('all init installs both adapters');
+
+result = run(['doctor'], path.join(tmp, 'claude-code-project'));
 if (result.status !== 0) fail('node CLI delegates doctor to Bash CLI');
 pass('node CLI delegates doctor');
 

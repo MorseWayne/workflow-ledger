@@ -79,13 +79,13 @@
 
 ## 安装
 
-推荐在目标项目根目录使用 npm setup：
+推荐先做全局工具接入：
 
 ```bash
 npx workflow-ledger setup
 ```
 
-也可以通过 adapter 安装到多个 AI coding 工具：
+也可以只配置特定 AI coding 工具：
 
 ```bash
 npx workflow-ledger setup --tool claude-code
@@ -93,9 +93,18 @@ npx workflow-ledger setup --tool codex
 npx workflow-ledger setup --tool all
 ```
 
-`claude-code` 会安装 Claude Code skill、项目规则、本地 CLI 和 `.claude/WORKFLOW.md`。`codex` 会安装 `AGENTS.md` 指令和 `.workflow-ledger/WORKFLOW.md`。
+然后在目标项目根目录初始化 ledger：
 
-如果环境更适合 `curl | bash`，Bash 安装器仍然可用：
+```bash
+npx workflow-ledger init
+npx workflow-ledger init --tool claude-code
+npx workflow-ledger init --tool codex
+npx workflow-ledger init --tool all
+```
+
+`setup` 安装全局工具接入；`init` 创建项目本地 ledger 和短指令片段。`claude-code` 使用 `.claude/WORKFLOW.md`；`codex` 使用 `.workflow-ledger/WORKFLOW.md` 和 `AGENTS.md`。
+
+Bash 安装器仍可用于 Claude Code 项目初始化：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/MorseWayne/workflow-ledger/main/install.sh | bash
@@ -140,24 +149,14 @@ cp -R skills/workflow-ledger ~/.claude/skills/workflow-ledger
 
 ## 项目接入
 
-一个项目需要三部分：
+项目接入分两层：
 
-1. 把 skill 安装到 `.claude/skills/workflow-ledger`。
-2. 把工作流规则片段加入项目 `CLAUDE.md`，让 Claude 始终能看到一段简短强制提醒：什么时候使用 skill 和 ledger。
-3. 从模板创建 `.claude/WORKFLOW.md`。
+1. 先用 `workflow-ledger setup` 做全局工具接入，让支持的 agent 能找到工作流指令。
+2. 再用 `workflow-ledger init` 初始化项目，让仓库里有 ledger 文件和短工具提醒。
 
-把 [examples/claude-project/CLAUDE.md.snippet](examples/claude-project/CLAUDE.md.snippet) 加到项目的 `CLAUDE.md`：
+对 Claude Code，`init` 会把 [examples/claude-project/CLAUDE.md.snippet](examples/claude-project/CLAUDE.md.snippet) 加入项目 `CLAUDE.md`，并把 [skills/workflow-ledger/templates/WORKFLOW.md](skills/workflow-ledger/templates/WORKFLOW.md) 创建到 `.claude/WORKFLOW.md`。
 
-```bash
-cat examples/claude-project/CLAUDE.md.snippet >> CLAUDE.md
-```
-
-从模板创建项目台账：
-
-```bash
-mkdir -p .claude
-cp skills/workflow-ledger/templates/WORKFLOW.md .claude/WORKFLOW.md
-```
+对 Codex，`init --tool codex` 会把 [examples/codex-project/AGENTS.md.snippet](examples/codex-project/AGENTS.md.snippet) 加入 `AGENTS.md`，并把 [templates/WORKFLOW.md](templates/WORKFLOW.md) 创建到 `.workflow-ledger/WORKFLOW.md`。
 
 ## 台账结构示例
 

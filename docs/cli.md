@@ -16,8 +16,9 @@ It does not modify your shell `PATH`.
 workflow-ledger setup --tool claude-code
 workflow-ledger setup --tool codex
 workflow-ledger setup --tool all
-workflow-ledger help
-workflow-ledger init
+workflow-ledger init --tool claude-code
+workflow-ledger init --tool codex
+workflow-ledger init --tool all
 workflow-ledger doctor
 workflow-ledger list
 workflow-ledger hooks status
@@ -26,22 +27,24 @@ workflow-ledger hooks install
 
 ## `setup`
 
-Installs Workflow Ledger into a project through tool adapters.
+Installs global Workflow Ledger integrations for supported AI coding tools.
 
-- `--tool claude-code` installs `.claude/skills/workflow-ledger`, `.claude/bin/workflow-ledger`, `.claude/WORKFLOW.md`, and the `CLAUDE.md` rules snippet.
-- `--tool codex` installs `.workflow-ledger/WORKFLOW.md` and the `AGENTS.md` rules snippet.
-- `--tool all` installs both adapters.
-- `--root PATH` targets a project root other than the current directory.
+- `--tool claude-code` installs the global Claude Code skill to `~/.claude/skills/workflow-ledger` and copies the local CLI to `~/.claude/bin/workflow-ledger`.
+- `--tool codex` installs the Codex skill to `~/.agents/skills/workflow-ledger` when `~/.codex` exists.
+- `--tool all` configures all detected adapters.
 
-`setup` is idempotent: it preserves existing ledger files and instruction sections.
+`setup` is environment-level and may skip tools that are not installed.
 
 ## `init`
 
-Creates `.claude/WORKFLOW.md` from the installed template when the ledger is missing.
+Creates project-local Workflow Ledger files for selected tools.
 
-- Never overwrites an existing ledger.
-- Prints guidance if the skill is not installed.
-- Does not download remote content.
+- `--tool claude-code` creates `.claude/WORKFLOW.md` and updates `CLAUDE.md`.
+- `--tool codex` creates `.workflow-ledger/WORKFLOW.md` and updates `AGENTS.md`.
+- `--tool all` initializes both project adapters.
+- `--root PATH` targets a project root other than the current directory.
+
+`init` preserves existing ledger files and instruction sections.
 
 ## `doctor`
 

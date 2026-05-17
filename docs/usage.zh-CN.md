@@ -4,13 +4,13 @@
 
 ## 安装到项目
 
-在你要接入的项目根目录运行：
+先做全局工具接入：
 
 ```bash
 npx workflow-ledger setup
 ```
 
-安装到特定工具：
+配置特定工具：
 
 ```bash
 npx workflow-ledger setup --tool claude-code
@@ -18,7 +18,16 @@ npx workflow-ledger setup --tool codex
 npx workflow-ledger setup --tool all
 ```
 
-`claude-code` adapter 会安装 `.claude/skills/workflow-ledger`、`CLAUDE.md` 规则片段和 `.claude/WORKFLOW.md`。`codex` adapter 会安装 `AGENTS.md` 规则片段和 `.workflow-ledger/WORKFLOW.md`。
+然后在项目根目录初始化 ledger：
+
+```bash
+npx workflow-ledger init
+npx workflow-ledger init --tool claude-code
+npx workflow-ledger init --tool codex
+npx workflow-ledger init --tool all
+```
+
+`claude-code` 项目 adapter 会创建 `.claude/WORKFLOW.md` 并更新 `CLAUDE.md`。`codex` 项目 adapter 会创建 `.workflow-ledger/WORKFLOW.md` 并更新 `AGENTS.md`。
 
 Bash 安装脚本仍然可用：
 
@@ -26,11 +35,10 @@ Bash 安装脚本仍然可用：
 curl -fsSL https://raw.githubusercontent.com/MorseWayne/workflow-ledger/main/install.sh | bash
 ```
 
-安装脚本是幂等的：
+初始化流程是幂等的：
 
-- 复制 skill 到 `.claude/skills/workflow-ledger`
-- 安装对应工具的规则片段
 - 只在缺失时创建对应的 Workflow Ledger 文件
+- 保留已有工具指令片段和 ledger
 
 如果你已经有本地 checkout：
 

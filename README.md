@@ -81,13 +81,13 @@ The key design decision is simple:
 
 ## Install
 
-Recommended npm setup from the root of the project you want to configure:
+Recommended global tool setup:
 
 ```bash
 npx workflow-ledger setup
 ```
 
-Multi-agent setup is available through tool adapters:
+Configure specific AI coding tools:
 
 ```bash
 npx workflow-ledger setup --tool claude-code
@@ -95,9 +95,18 @@ npx workflow-ledger setup --tool codex
 npx workflow-ledger setup --tool all
 ```
 
-`claude-code` installs the Claude Code skill, project rules, local CLI, and `.claude/WORKFLOW.md`. `codex` installs shared instructions in `AGENTS.md` and `.workflow-ledger/WORKFLOW.md`.
+Then initialize a project ledger from the target project root:
 
-The Bash installer remains available for environments that prefer `curl | bash`:
+```bash
+npx workflow-ledger init
+npx workflow-ledger init --tool claude-code
+npx workflow-ledger init --tool codex
+npx workflow-ledger init --tool all
+```
+
+`setup` installs global tool integrations. `init` creates project-local ledger files and short instruction snippets. `claude-code` uses `.claude/WORKFLOW.md`; `codex` uses `.workflow-ledger/WORKFLOW.md` plus `AGENTS.md`.
+
+The Bash installer remains available for Claude Code project initialization:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/MorseWayne/workflow-ledger/main/install.sh | bash
@@ -142,24 +151,14 @@ Then invoke it in Claude Code:
 
 ## Project setup
 
-A project needs three pieces:
+A project needs two layers:
 
-1. Install the skill into `.claude/skills/workflow-ledger`.
-2. Add the workflow rules snippet to the project's `CLAUDE.md` so Claude has a short, always-loaded reminder to use the skill and ledger.
-3. Create `.claude/WORKFLOW.md` from the template.
+1. Global tool setup with `workflow-ledger setup` so supported agents can find the workflow instructions.
+2. Project initialization with `workflow-ledger init` so the repository has a ledger file and a short tool-specific reminder.
 
-Add the snippet from [examples/claude-project/CLAUDE.md.snippet](examples/claude-project/CLAUDE.md.snippet) to your project's `CLAUDE.md`:
+For Claude Code, `init` adds the snippet from [examples/claude-project/CLAUDE.md.snippet](examples/claude-project/CLAUDE.md.snippet) to your project's `CLAUDE.md` and creates [skills/workflow-ledger/templates/WORKFLOW.md](skills/workflow-ledger/templates/WORKFLOW.md) at `.claude/WORKFLOW.md`.
 
-```bash
-cat examples/claude-project/CLAUDE.md.snippet >> CLAUDE.md
-```
-
-Create a project ledger from [skills/workflow-ledger/templates/WORKFLOW.md](skills/workflow-ledger/templates/WORKFLOW.md):
-
-```bash
-mkdir -p .claude
-cp skills/workflow-ledger/templates/WORKFLOW.md .claude/WORKFLOW.md
-```
+For Codex, `init --tool codex` adds [examples/codex-project/AGENTS.md.snippet](examples/codex-project/AGENTS.md.snippet) to `AGENTS.md` and creates [templates/WORKFLOW.md](templates/WORKFLOW.md) at `.workflow-ledger/WORKFLOW.md`.
 
 ## The ledger shape
 

@@ -2,13 +2,13 @@
 
 ## Install into a project
 
-Recommended npm setup from the root of the project you want to configure:
+Recommended global setup:
 
 ```bash
 npx workflow-ledger setup
 ```
 
-Install for a specific AI coding tool:
+Configure a specific AI coding tool:
 
 ```bash
 npx workflow-ledger setup --tool claude-code
@@ -16,7 +16,16 @@ npx workflow-ledger setup --tool codex
 npx workflow-ledger setup --tool all
 ```
 
-The `claude-code` adapter installs `.claude/skills/workflow-ledger`, the `CLAUDE.md` rules snippet, `.claude/bin/workflow-ledger`, and `.claude/WORKFLOW.md`. The `codex` adapter installs the `AGENTS.md` rules snippet and `.workflow-ledger/WORKFLOW.md`.
+Then initialize the project ledger from the project root:
+
+```bash
+npx workflow-ledger init
+npx workflow-ledger init --tool claude-code
+npx workflow-ledger init --tool codex
+npx workflow-ledger init --tool all
+```
+
+The `claude-code` project adapter creates `.claude/WORKFLOW.md` and updates `CLAUDE.md`. The `codex` project adapter creates `.workflow-ledger/WORKFLOW.md` and updates `AGENTS.md`.
 
 The Bash installer remains available:
 
@@ -24,9 +33,8 @@ The Bash installer remains available:
 curl -fsSL https://raw.githubusercontent.com/MorseWayne/workflow-ledger/main/install.sh | bash
 ```
 
-The setup flow is idempotent:
+The init flow is idempotent:
 
-- installs the selected tool instructions
 - creates the relevant Workflow Ledger file only if missing
 - preserves existing instruction sections and ledgers
 

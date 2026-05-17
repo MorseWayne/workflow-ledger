@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const { spawnSync } = require('child_process');
 
@@ -18,19 +19,19 @@ function printHelp() {
   console.log(`workflow-ledger — lightweight workflow guardrails for AI coding agents
 
 Usage:
-  workflow-ledger setup [--tool claude-code|codex|all] [--root PATH]
+  workflow-ledger setup [--tool claude-code|codex|all]
+  workflow-ledger init [--tool claude-code|codex|all] [--root PATH]
   workflow-ledger help
-  workflow-ledger init
   workflow-ledger doctor
   workflow-ledger list
   workflow-ledger hooks status
   workflow-ledger hooks install
 
-Setup defaults to --tool claude-code for compatibility.`);
+setup installs global tool integrations. init creates project-local ledger files.`);
 }
 
 function parseArgs(argv) {
-  const args = { command: argv[0] || 'help', tool: 'claude-code', root: targetRoot, passthrough: argv.slice(1) };
+  const args = { command: argv[0] || 'help', tool: 'claude-code', root: targetRoot };
   for (let i = 1; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === '--tool') {
@@ -53,14 +54,22 @@ function ensureDir(dir) {
   fs.mkdirSync(dir, { recursive: true });
 }
 
-function copyFileIfMissing(src, dest, createdMessage, keptMessage) {
+function dirExists(dir) {
+  try {
+    return fs.statSync(dir).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+function copyFileIfMissing(src, dest, createdMessage, keptMessage, result) {
   if (fs.existsSync(dest)) {
-    console.log(keptMessage);
+    result.configured.push(keptMessage);
     return;
   }
   ensureDir(path.dirname(dest));
   fs.copyFileSync(src, dest);
-  console.log(createdMessage);
+  result.configured.push(createdMessage);
 }
 
 function copyDir(src, dest) {
@@ -69,7 +78,7 @@ function copyDir(src, dest) {
   fs.cpSync(src, dest, { recursive: true });
 }
 
-function appendSnippet(marker, snippetPath, targetPath, updatedMessage, keptMessage) {
+function appendSnippet(marker, snippetPath, targetPath, updatedMessage, keptMessage, result) {
   let current = '';
   if (fs.existsSync(targetPath)) {
     current = fs.readFileSync(targetPath, 'utf8');
@@ -77,69 +86,136 @@ function appendSnippet(marker, snippetPath, targetPath, updatedMessage, keptMess
     ensureDir(path.dirname(targetPath));
   }
   if (current.includes(marker)) {
-    console.log(keptMessage);
+    result.configured.push(keptMessage);
     return;
   }
   const prefix = current.length > 0 && !current.endsWith('\n') ? '\n\n' : current.length > 0 ? '\n' : '';
   fs.appendFileSync(targetPath, `${prefix}${fs.readFileSync(snippetPath, 'utf8')}`);
-  console.log(updatedMessage);
+  result.configured.push(updatedMessage);
 }
 
-function setupClaudeCode(root) {
+function validateTool(tool) {
+  if (!['claude-code', 'codex', 'all'].includes(tool)) {
+    console.error(`error: unknown tool '${tool}'. Expected claude-code, codex, or all.`);
+    process.exitCode = 1;
+    return false;
+  }
+  return true;
+}
+
+function createResult() {
+  return { configured: [], skipped: [], errors: [] };
+}
+
+function printResult(title, result) {
+  console.log(`\n${title}`);
+  if (result.configured.length > 0) {
+    console.log('Configured:');
+    for (const item of result.configured) console.log(`  + ${item}`);
+  }
+  if (result.skipped.length > 0) {
+    console.log('Skipped:');
+    for (const item of result.skipped) console.log(`  - ${item}`);
+  }
+  if (result.errors.length > 0) {
+    console.log('Errors:');
+    for (const item of result.errors) console.log(`  ! ${item}`);
+    process.exitCode = 1;
+  }
+}
+
+function setupClaudeCodeGlobal(result) {
+  const claudeDir = path.join(os.homedir(), '.claude');
+  if (!dirExists(claudeDir)) {
+    result.skipped.push('Claude Code (not installed)');
+    return;
+  }
+  const skillsDir = path.join(claudeDir, 'skills');
+  const binDir = path.join(claudeDir, 'bin');
+  try {
+    copyDir(path.join(repoRoot, 'skills', 'workflow-ledger'), path.join(skillsDir, 'workflow-ledger'));
+    ensureDir(binDir);
+    fs.copyFileSync(path.join(repoRoot, 'bin', 'workflow-ledger'), path.join(binDir, 'workflow-ledger'));
+    fs.chmodSync(path.join(binDir, 'workflow-ledger'), 0o755);
+    result.configured.push('Claude Code skill → ~/.claude/skills/workflow-ledger');
+    result.configured.push('Claude Code local CLI → ~/.claude/bin/workflow-ledger');
+  } catch (error) {
+    result.errors.push(`Claude Code: ${error.message}`);
+  }
+}
+
+function setupCodexGlobal(result) {
+  const codexDir = path.join(os.homedir(), '.codex');
+  if (!dirExists(codexDir)) {
+    result.skipped.push('Codex (not installed)');
+    return;
+  }
+  const skillDir = path.join(os.homedir(), '.agents', 'skills', 'workflow-ledger');
+  try {
+    ensureDir(skillDir);
+    fs.copyFileSync(path.join(repoRoot, 'examples', 'codex-project', 'AGENTS.md.snippet'), path.join(skillDir, 'SKILL.md'));
+    result.configured.push('Codex skill → ~/.agents/skills/workflow-ledger');
+  } catch (error) {
+    result.errors.push(`Codex: ${error.message}`);
+  }
+}
+
+function setup(args) {
+  if (!validateTool(args.tool)) return;
+  const result = createResult();
+  if (args.tool === 'claude-code' || args.tool === 'all') setupClaudeCodeGlobal(result);
+  if (args.tool === 'codex' || args.tool === 'all') setupCodexGlobal(result);
+  printResult('Workflow Ledger Setup', result);
+  console.log('\nNext: run workflow-ledger init in a project.');
+}
+
+function initClaudeCodeProject(root, result) {
   const claudeDir = path.join(root, '.claude');
-  ensureDir(path.join(claudeDir, 'skills'));
-  ensureDir(path.join(claudeDir, 'bin'));
-  copyDir(path.join(repoRoot, 'skills', 'workflow-ledger'), path.join(claudeDir, 'skills', 'workflow-ledger'));
-  fs.copyFileSync(path.join(repoRoot, 'bin', 'workflow-ledger'), path.join(claudeDir, 'bin', 'workflow-ledger'));
-  fs.chmodSync(path.join(claudeDir, 'bin', 'workflow-ledger'), 0o755);
+  ensureDir(claudeDir);
   copyFileIfMissing(
     path.join(repoRoot, 'skills', 'workflow-ledger', 'templates', 'WORKFLOW.md'),
     path.join(claudeDir, 'WORKFLOW.md'),
     'created .claude/WORKFLOW.md',
-    'kept existing .claude/WORKFLOW.md'
+    'kept existing .claude/WORKFLOW.md',
+    result
   );
   appendSnippet(
     '## Workflow Ledger',
     path.join(repoRoot, 'examples', 'claude-project', 'CLAUDE.md.snippet'),
     path.join(root, 'CLAUDE.md'),
     'updated CLAUDE.md',
-    'kept existing Workflow Ledger section in CLAUDE.md'
+    'kept existing Workflow Ledger section in CLAUDE.md',
+    result
   );
-  console.log('installed workflow-ledger for Claude Code');
 }
 
-function setupCodex(root) {
+function initCodexProject(root, result) {
   const ledgerDir = path.join(root, '.workflow-ledger');
   ensureDir(ledgerDir);
   copyFileIfMissing(
     path.join(repoRoot, 'templates', 'WORKFLOW.md'),
     path.join(ledgerDir, 'WORKFLOW.md'),
     'created .workflow-ledger/WORKFLOW.md',
-    'kept existing .workflow-ledger/WORKFLOW.md'
+    'kept existing .workflow-ledger/WORKFLOW.md',
+    result
   );
   appendSnippet(
     '# Workflow Ledger',
     path.join(repoRoot, 'examples', 'codex-project', 'AGENTS.md.snippet'),
     path.join(root, 'AGENTS.md'),
     'updated AGENTS.md',
-    'kept existing Workflow Ledger section in AGENTS.md'
+    'kept existing Workflow Ledger section in AGENTS.md',
+    result
   );
-  console.log('installed workflow-ledger for Codex');
 }
 
-function setup(args) {
-  if (!['claude-code', 'codex', 'all'].includes(args.tool)) {
-    console.error(`error: unknown tool '${args.tool}'. Expected claude-code, codex, or all.`);
-    process.exitCode = 1;
-    return;
-  }
+function initProject(args) {
+  if (!validateTool(args.tool)) return;
+  const result = createResult();
   ensureDir(args.root);
-  if (args.tool === 'claude-code' || args.tool === 'all') {
-    setupClaudeCode(args.root);
-  }
-  if (args.tool === 'codex' || args.tool === 'all') {
-    setupCodex(args.root);
-  }
+  if (args.tool === 'claude-code' || args.tool === 'all') initClaudeCodeProject(args.root, result);
+  if (args.tool === 'codex' || args.tool === 'all') initCodexProject(args.root, result);
+  printResult('Workflow Ledger Init', result);
 }
 
 function delegateToBash(argv) {
@@ -156,6 +232,8 @@ if (args.command === 'help' || args.command === '-h' || args.command === '--help
   printHelp();
 } else if (args.command === 'setup') {
   setup(args);
+} else if (args.command === 'init') {
+  initProject(args);
 } else {
   delegateToBash(process.argv.slice(2));
 }
