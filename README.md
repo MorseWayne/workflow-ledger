@@ -191,7 +191,7 @@ Resume next:
 
 | Level | Use for | Ledger? |
 |---|---|---|
-| Level 0 | Q&A, read-only explanation | No |
+| Level 0 | Q&A, read-only explanation, tagging or release-version publishing | No |
 | Level 1 | typo, docs tweak, tiny config, no behavior change | Optional |
 | Level 2 | standard code work, tests, single-module behavior changes | Yes |
 | Level 3 | new features, cross-module work, public APIs, unclear or high-risk changes | Yes, attachments optional |

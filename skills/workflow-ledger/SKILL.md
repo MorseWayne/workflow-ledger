@@ -33,7 +33,7 @@ For project-local use, the installer configures all three pieces:
 
 Classify first. If uncertain, choose the lighter level unless risk appears.
 
-- **Level 0 — Q&A / read-only**: explain, answer, inspect without edits. No ledger required.
+- **Level 0 — Q&A / read-only / release bookkeeping**: explain, answer, inspect without edits, create tags, or publish release versions. No ledger required.
 - **Level 1 — lightweight edit**: typo, docs tweak, formatting, tiny config, no runtime behavior change. Ledger optional.
 - **Level 2 — standard code work**: small bugfix, single-module behavior change, tests, provider logic, repeatable multi-step work. Use ledger.
 - **Level 3 — complex work**: new feature, cross-module or cross-repo changes, public API/data model changes, auth/streaming/concurrency/metrics, unclear requirements, high-risk impact. Use ledger and add attachments only when the ledger would otherwise become too long.
@@ -48,7 +48,7 @@ Escalate when you discover cross-file behavior changes, public API changes, fail
 - Do not rewrite `Completed` history except to fix an obvious error.
 - Do not do cross-task cleanup while updating one task.
 - Keep each Active task under roughly 80 lines.
-- Move short-lived release, cleanup, and index-refresh tasks to `Completed` as soon as they finish.
+- If a short-lived release, cleanup, or index-refresh task is already tracked, move it to `Completed` as soon as it finishes.
 
 ## Ledger structure
 

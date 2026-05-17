@@ -35,7 +35,7 @@ skill 指导 Claude：
 
 ## 任务级别
 
-- Level 0：问答 / 只读解释，不需要 ledger。
+- Level 0：问答 / 只读解释 / 新增 tag 或发布版本，不需要 ledger。
 - Level 1：轻量修改，ledger 可选。
 - Level 2：标准代码任务，需要 ledger。
 - Level 3：复杂任务，需要 ledger，可选附件。

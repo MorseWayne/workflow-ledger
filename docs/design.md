@@ -33,7 +33,7 @@ The skill teaches Claude how to:
 
 ## Task levels
 
-- Level 0: Q&A/read-only, no ledger.
+- Level 0: Q&A/read-only/tagging or release-version publishing, no ledger.
 - Level 1: lightweight edit, ledger optional.
 - Level 2: standard code work, ledger required.
 - Level 3: complex work, ledger required and optional attachments allowed.
