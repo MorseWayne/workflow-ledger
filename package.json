@@ -13,13 +13,14 @@
     "templates/",
     "docs/*.md",
     "hooks/",
+    ".claude-plugin/",
     "install.sh",
     "README.md",
     "README.zh-CN.md",
     "LICENSE"
   ],
   "scripts": {
-    "test": "tests/run-cli-tests.sh && node tests/run-node-cli-tests.cjs"
+    "test": "tests/run-cli-tests.sh && node tests/run-node-cli-tests.cjs && bash tests/claude-code/run-skill-behavior-test.sh"
   },
   "engines": {
     "node": ">=18"

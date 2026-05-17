@@ -1,6 +1,6 @@
 # 设计说明
 
-`workflow-ledger` 是面向 Claude Code 项目的轻量级工作流层。
+`workflow-ledger` 是面向 Claude Code 项目的轻量级 OpenSpec-style change ledger。
 
 ## 问题
 
@@ -10,14 +10,14 @@
 
 ## 方案
 
-使用一个里程碑总览文件 `.claude/WORKFLOW.md`，再配合一个可复用 Claude Code skill。
+使用一个单文件 change ledger `.claude/WORKFLOW.md`，再配合一个可复用 Claude Code skill。
 
 skill 指导 Claude：
 
 - 判断任务重量级别。
-- 创建或更新阶段化任务条目。
-- 跟踪依赖和执行中发现的未来任务。
-- 在每个完成阶段后记录验收和 review 摘要。
+- 创建或更新一个 intent-first 任务条目。
+- 执行中发现新情况时允许调整 `Current todo`。
+- 跟踪前置依赖、阻塞和执行中发现的未来任务。
 - 把完成任务归档为简洁历史。
 
 ## 非目标
@@ -29,7 +29,7 @@ skill 指导 Claude：
 
 ## 文件模型
 
-- `.claude/WORKFLOW.md`：项目本地里程碑台账。
+- `.claude/WORKFLOW.md`：项目本地 change ledger。
 - `.claude/skills/workflow-ledger/SKILL.md`：可复用工作流说明。
 - 可选附件：只用于 Level 3 的长细节。
 
@@ -42,6 +42,6 @@ skill 指导 Claude：
 
 ## 恢复模型
 
-恢复任务时读取 `.claude/WORKFLOW.md`，找到 `Active`，根据 `Current phase`、未完成子任务、依赖和 `Resume next` 继续。
+恢复任务时读取 `.claude/WORKFLOW.md`，找到 `Active`，根据 `Intent`、`Current phase`、`Current todo`、`Prerequisites`、`Blocked by` 和 `Resume next` 继续。
 
 在信任 ledger 前，应先检查当前仓库状态；如果代码现状和 ledger 不一致，以当前代码和 git 状态为准，并更新 ledger。

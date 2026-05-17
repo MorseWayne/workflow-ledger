@@ -5,30 +5,35 @@
 ### WF-2026-05-16-001 — Healthy task
 Status: In Progress
 Level: 2
-Current phase: Phase 1 — Build CLI
+Current phase: Build CLI guardrails
 
-Phases:
-- [x] Phase 0 — Design CLI: confirmed guardrail scope.
-- [ ] Phase 1 — Build CLI: current objective.
+Intent:
+- Provide lightweight CLI guardrails for the workflow ledger.
 
-Current phase tasks:
+Current todo:
 - [x] Implement CLI.
+- [ ] Continue with docs.
 
-Acceptance:
-- Review: Checked CLI behavior.
-- Validation: Ran tests.
-- GitNexus: N/A.
-- Commit: N/A in fixture.
-- Gaps: None.
+Changes:
+- 2026-05-16 — Keep the fixture short and focused on resume readiness.
+
+Prerequisites:
+- None.
 
 Resume next:
 - Continue with docs.
 
 ## Backlog / Future
 
-- [ ] Future task
+- [ ] Future task — deferred because it does not block CLI guardrails.
 
 ## Completed
 
 ### WF-2026-05-15-001 — Done task
-Status: Done
+Completed: 2026-05-15
+Level: 1
+
+Close summary:
+- Outcome: Fixture completed task.
+- Validation: N/A.
+- Gaps: None.

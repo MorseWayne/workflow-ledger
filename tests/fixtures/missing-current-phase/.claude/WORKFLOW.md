@@ -6,12 +6,17 @@
 Status: In Progress
 Level: 2
 
-Phases:
+Intent:
+- Provide lightweight CLI guardrails for the workflow ledger.
 
-#### Phase 1 — Build CLI
-Status: In Progress
-Tasks:
-- [ ] Implement CLI
+Current todo:
+- [ ] Implement CLI.
+
+Changes:
+- 2026-05-16 — Fixture intentionally omits Current phase.
+
+Prerequisites:
+- None.
 
 Resume next:
 - Continue.

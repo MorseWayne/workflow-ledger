@@ -33,14 +33,15 @@ copy_fixture healthy "$root"
 run_ok 'doctor returns 0 for healthy ledger' env WORKFLOW_LEDGER_ROOT="$root" "$CLI" doctor
 grep -Fq 'doctor finished with 0 errors' "$TMP_DIR/out" || fail 'healthy doctor output'
 
-run_ok 'list prints active task and current phase' env WORKFLOW_LEDGER_ROOT="$root" "$CLI" list
+run_ok 'list prints active task, current focus, and resume next' env WORKFLOW_LEDGER_ROOT="$root" "$CLI" list
 grep -Fq 'Healthy task' "$TMP_DIR/out" || fail 'list active task'
-grep -Fq 'Current phase: Phase 1 — Build CLI' "$TMP_DIR/out" || fail 'list current phase'
+grep -Fq 'Current phase: Build CLI guardrails' "$TMP_DIR/out" || fail 'list current phase'
+grep -Fq 'Resume next: Continue with docs.' "$TMP_DIR/out" || fail 'list resume next'
 
-root="$TMP_DIR/missing-acceptance"
-copy_fixture missing-acceptance "$root"
-run_fail 'doctor returns 1 for missing Acceptance' env WORKFLOW_LEDGER_ROOT="$root" "$CLI" doctor
-grep -Fq 'lacks Acceptance' "$TMP_DIR/out" || fail 'missing acceptance error'
+root="$TMP_DIR/missing-intent"
+copy_fixture missing-intent "$root"
+run_fail 'doctor returns 1 for missing Intent' env WORKFLOW_LEDGER_ROOT="$root" "$CLI" doctor
+grep -Fq 'lacks Intent' "$TMP_DIR/out" || fail 'missing intent error'
 
 root="$TMP_DIR/missing-current-phase"
 copy_fixture missing-current-phase "$root"

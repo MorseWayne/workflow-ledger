@@ -1,8 +1,8 @@
 # workflow-ledger
 
-面向 Claude Code 的轻量级工作流记忆层。
+面向 Claude Code 的轻量级 OpenSpec-style change ledger。
 
-`workflow-ledger` 让 Claude Code 项目在开发过程中保持**可跟踪、可恢复、可验收**，但不强迫每个任务都进入沉重的 spec 流程。
+`workflow-ledger` 让 Claude Code 项目在开发过程中保持**可跟踪、可恢复、可调整**，但不强迫每个任务都进入 proposal/design/tasks/spec 文件流程。
 
 它要解决的是 AI 辅助开发里非常常见的问题：
 
@@ -23,23 +23,22 @@
 
 这些对大型功能很有价值，但对日常 Claude Code 开发太重了。大多数任务真正需要的是：
 
-- 一个地方看当前任务
-- 阶段化任务，而不是平铺 checklist
-- 清楚的验收和 review 摘要
-- 能看到依赖和延期任务
+- 一个地方看当前 change intent
+- 可变的 `Current todo`，而不是冻结计划
+- 能看到前置依赖、阻塞和延期任务
 - 中断后能恢复
-- 只有复杂任务才创建附件
+- 完成时只写短 `Close summary`
 
 `workflow-ledger` 保留这些关键能力，同时避免制造大量文件。
 
 ## 它提供什么
 
-- **单文件总览**：`.claude/WORKFLOW.md` 是任务状态源。
+- **单文件 change ledger**：`.claude/WORKFLOW.md` 是任务状态源。
 - **任务分级**：Level 0-3，让简单任务保持轻量，复杂任务更安全。
-- **阶段总览**：任务保留短 `Phases:` 列表，只展开当前阶段。
-- **短验收证据**：完成工作记录 Review、Validation、GitNexus、commit/test evidence 和 Gaps。
-- **可恢复点**：每个活跃任务都有 `Current phase` 和 `Resume next`。
-- **依赖管理**：阻塞项变成 dependencies，非阻塞发现进入 Backlog/Future。
+- **Intent-first 条目**：每个 Active 任务只记录一个小的用户可见目标。
+- **可变 todo**：`Current todo` 可以随新增需求、前置依赖或阻塞调整。
+- **可恢复点**：每个活跃任务都有表示当前焦点的 `Current phase` 和 `Resume next`。
+- **依赖管理**：阻塞当前目标的前置依赖留在 Active；非阻塞发现进入 Backlog/Future。
 - **低文件数量**：默认不为每个任务创建独立文件。
 - **Claude Code 原生**：以 skill 形式交付，不需要运行时依赖。
 
@@ -57,25 +56,25 @@
 
 | 工具 / 工作流 | 最擅长 | 常见形态 | `workflow-ledger` 的区别 |
 |---|---|---|---|
-| Superpowers 风格 skills | 用可复用 skill 和 checklist 教 Claude 按固定方式工作 | skill 包、详细流程、设计/计划循环、明确的人类批准门 | 采用同样的 skill-native 交付方式，但范围更窄：只解决任务记忆、阶段状态、恢复点和 review 摘要 |
-| GSD 风格规划工作流 | 把大型工作拆成调研、计划、执行、验证、安全/UI/eval review 等阶段 | 多 agent 规划与执行、阶段文档、review 报告、更强流程门禁 | 借鉴可恢复和分阶段思路，但把日常任务的仪式感降到最低；重型 review 产物只作为 Level 3 可选附件 |
-| OpenSpec 风格 spec 工作流 | 用 proposal、spec、tasks 和归档历史治理产品/API 变化 | 正式 proposal/design/task 文件和 spec 生命周期 | 借鉴阶段和验收意识，但不要求每个改动都从 proposal 目录开始 |
+| Superpowers 风格 skills | 用可复用 skill 和 checklist 教 Claude 按固定方式工作 | skill 包、详细流程、设计/计划循环、明确的人类批准门 | 采用同样的 skill-native 交付方式，但范围更窄：只解决任务记忆、change intent、可变 todo、前置依赖和恢复点 |
+| GSD 风格规划工作流 | 把大型工作拆成调研、计划、执行、验证、安全/UI/eval review 等阶段 | 多 agent 规划与执行、阶段文档、review 报告、更强流程门禁 | 借鉴可恢复思路，但把日常任务的仪式感降到最低；重型 review 产物不进入默认 ledger |
+| OpenSpec 风格 spec 工作流 | 用 proposal、spec、tasks 和归档历史治理产品/API 变化 | 正式 proposal/design/task 文件和 spec 生命周期 | 借鉴 intent/change 管理意识，但不要求每个改动都从 proposal/design/tasks/spec 文件开始 |
 | Claude Code hooks | 在工具调用或生命周期边界确定性执行规则 | PreToolUse、PostToolUse、Stop、Compact 等事件处理器 | 把 hooks 视为可选保险丝；工作流状态仍放在可读的 `.claude/WORKFLOW.md` 中 |
 | TodoWrite / 会话 todo | 管理 Claude 当前会话正在做什么 | 当前会话内频繁更新的 checklist | TodoWrite 只负责现场执行；ledger 负责持久里程碑和交接上下文 |
 
-一句话概括：Superpowers 教行为，GSD 编排重型执行，OpenSpec 治理正式变更，hooks 强制事件规则，TodoWrite 跟踪当前会话。`workflow-ledger` 补的是中间那一层：日常 Claude Code 开发里的持久任务记忆。
+一句话概括：Superpowers 教行为，GSD 编排重型执行，OpenSpec 治理正式变更，hooks 强制事件规则，TodoWrite 跟踪当前会话。`workflow-ledger` 补的是中间那一层：日常 Claude Code 开发里的单文件 OpenSpec-lite 任务记忆。
 
 ## 借鉴了哪些思路
 
 `workflow-ledger` 借鉴了 spec-driven 和 skill-driven 工作流，但刻意保持更小：
 
-- 借鉴 OpenSpec 这类 spec-driven 系统：阶段、验收、可恢复状态。
+- 借鉴 OpenSpec 这类 spec-driven 系统：明确 intent、依赖意识和归档式关闭摘要。
 - 借鉴 Claude Code skills / Superpowers 风格：把可复用流程写成 skill，按需加载。
 - 借鉴 hooks：关键动作可以有硬性保护，但不默认把 hook 变成工作流引擎。
 
 核心设计原则是：
 
-> 强制规则保持短；详细流程放 skill；长期进度放一个 ledger 文件。
+> 强制规则保持短；详细流程放 skill；长期 change state 放一个 ledger 文件。
 
 ## 安装
 
@@ -166,26 +165,20 @@ cp -R skills/workflow-ledger ~/.claude/skills/workflow-ledger
 ### WF-2026-05-16-001 — Add streaming usage accounting
 Status: In Progress
 Level: 2
-Current phase: Phase 2 — Implement conversion fix
+Current phase: Implement conversion fix
 
-Goal:
+Intent:
 - Stabilize streaming usage accounting without expanding the ledger into a transcript.
 
-Phases:
-- [x] Phase 1 — Research current flow: confirmed affected provider path.
-- [ ] Phase 2 — Implement conversion fix: current objective.
-- [ ] Phase 3 — Validate and close: expand only when current.
-
-Current phase tasks:
+Current todo:
 - [ ] Update converter.
 - [ ] Add regression test.
 
-Acceptance:
-- Review: Confirmed affected provider path.
-- Validation: Read current tests and conversion code.
-- GitNexus: Impact analysis showed medium risk.
-- Commit: N/A until implementation is committed.
-- Gaps: Implementation pending.
+Changes:
+- 2026-05-16 — Current implementation path narrowed to the provider conversion code.
+
+Prerequisites:
+- Existing streaming usage tests must be checked before editing.
 
 Resume next:
 - Update the converter and add the smallest regression test.
@@ -203,9 +196,9 @@ Resume next:
 ## 设计原则
 
 - 总览文件必须一眼有用。
-- 只展开当前阶段；未来阶段先保持粗粒度。
-- 验收和 review 结果紧贴已完成阶段。
-- 新增依赖或未来任务时记录原因。
+- 保持 Active intent 小而明确。
+- 执行中发现新情况时允许调整 `Current todo`。
+- 新增前置依赖或未来任务时记录原因。
 - 不为了流程而流程。
 - 优先一个持久 ledger，而不是散落的过程文件。
 

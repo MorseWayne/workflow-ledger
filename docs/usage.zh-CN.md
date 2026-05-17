@@ -72,8 +72,8 @@ Claude 应该：
 
 1. 判断任务级别。
 2. 创建或更新 `.claude/WORKFLOW.md`。
-3. 规划阶段。
-4. 只展开当前阶段的具体子任务。
+3. 写最小 `Intent`。
+4. 设置可变的 `Current todo`、`Prerequisites` 和 `Resume next`。
 5. 使用 TodoWrite 跟踪当前会话执行。
 
 ## 恢复任务
@@ -82,16 +82,16 @@ Claude 应该：
 /workflow-ledger resume
 ```
 
-Claude 应该读取 `.claude/WORKFLOW.md`，检查当前仓库状态，然后根据 `Current phase`、`Current phase tasks` 和 `Resume next` 继续执行。
+Claude 应该读取 `.claude/WORKFLOW.md`，检查当前仓库状态，然后根据 `Intent`、`Current phase`、`Current todo`、`Prerequisites`、`Blocked by` 和 `Resume next` 继续执行。
 
 ## 更新任务
 
 在执行过程中，只在里程碑节点更新 ledger：
 
 - 任务开始
-- 关键决策
-- 阶段完成
-- 发现依赖或阻塞
+- todo/scope 出现实质变化
+- 新增前置依赖
+- 工作被阻塞
 - 验证结果
 - 中断交接
 - 提交或关闭任务
@@ -106,10 +106,10 @@ Claude 应该读取 `.claude/WORKFLOW.md`，检查当前仓库状态，然后根
 
 Claude 应该：
 
-1. 确认必要阶段已完成，或明确延期。
-2. 补充短 `Acceptance` 证据。
-3. 把任务从 `Active` 移到 `Completed`。
-4. 记录 commit、验收摘要、GitNexus 摘要、缺口和后续任务。
+1. 确认必要工作已完成，或明确延期。
+2. 把任务从 `Active` 移到 `Completed`。
+3. 用 `Close summary:` 替换 active-only 字段。
+4. 只记录 outcome、validation 和 gaps。
 5. 把未来工作保留在 `Backlog / Future`。
 
 ## 保持轻量

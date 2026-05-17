@@ -94,8 +94,8 @@ Claude should:
 
 1. classify the task level
 2. create or update `.claude/WORKFLOW.md`
-3. define a short `Phases:` overview
-4. expand only `Current phase tasks`
+3. write the smallest `Intent`
+4. set mutable `Current todo`, `Prerequisites`, and `Resume next`
 5. use TodoWrite for the current session
 
 ## Resume work
@@ -104,7 +104,7 @@ Claude should:
 /workflow-ledger resume
 ```
 
-Claude should read `.claude/WORKFLOW.md`, verify repo state, and continue from `Current phase`, `Current phase tasks`, and `Resume next`.
+Claude should read `.claude/WORKFLOW.md`, verify repo state, and continue from `Intent`, `Current phase`, `Current todo`, `Prerequisites`, `Blocked by`, and `Resume next`.
 
 ## Close work
 
@@ -112,7 +112,7 @@ Claude should read `.claude/WORKFLOW.md`, verify repo state, and continue from `
 /workflow-ledger close
 ```
 
-Claude should move the task from `Active` to `Completed`, record acceptance summary, commits, gaps, and follow-up tasks.
+Claude should move the task from `Active` to `Completed` and record a short `Close summary` with outcome, validation, and gaps.
 
 ## Keep it lightweight
 

@@ -55,25 +55,23 @@ Errors return exit code `1`:
 - Missing `.claude/WORKFLOW.md`.
 - Missing core sections: `Active`, `Backlog / Future`, or `Completed`.
 - In Progress task without `Current phase`.
-- `Current phase` that does not exactly match a phase heading or `Phases:` overview item.
-- Done phase without `Acceptance` / `Acceptance / Review`.
-- Done phase missing `- Review:`, `- Validation:`, `- GitNexus:`, `- Commit:` or `- Tests:`, or `- Gaps:`.
-- New-style task with completed `Phases:` items but no task-level `Acceptance` evidence.
+- In Progress task without `Intent`.
+- In Progress task without `Current todo`.
+- In Progress task without `Resume next`.
+- Blocked task without `Blocked by` or `Resume next`.
 
 Warnings do not fail the command:
 
 - More than one Active task.
-- Level 2/3 task without `Resume next`.
+- Level 2/3 task without `Changes` or `Prerequisites`.
 - Ledger older than the latest git commit.
-- Task with more than seven phases.
 - Active task with more than 80 lines.
-- Acceptance with more than five bullets.
-- Blocked phase without a literal `Blocked by` line.
+- Completed task still under `Active` without `Close summary`.
 - Backlog with more than 10 items.
 
 ## `list`
 
-Prints a compact summary of active tasks, backlog count, and completed count.
+Prints a compact summary of active tasks, current focus, resume next action, backlog count, and completed count.
 
 If `.claude/WORKFLOW.md` is missing, `list` prints a message and exits `0`.
 

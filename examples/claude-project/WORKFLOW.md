@@ -7,38 +7,30 @@ Status: In Progress
 Level: 2
 Started: 2026-05-16
 Last updated: 2026-05-16
-Current phase: Phase 2 — Implement skill toolkit
+Current phase: Validate installation path
 
-Goal:
-- Add a reusable Claude Code workflow ledger skill without turning the ledger into a transcript.
+Intent:
+- Add a reusable Claude Code workflow ledger skill without turning the ledger into a transcript or heavyweight spec.
 
-Decisions:
-- 2026-05-16 — Use one `.claude/WORKFLOW.md` overview instead of one file per task.
-- 2026-05-16 — Use optional attachments only when Level 3 detail is too long for the ledger.
-
-Phases:
-- [x] Phase 1 — Research and design: choose the ledger shape and responsibilities.
-- [ ] Phase 2 — Implement skill toolkit: finish docs and validate installation.
-
-Current phase tasks:
+Current todo:
 - [x] Create skill directory.
 - [x] Write SKILL.md.
-- [ ] Add README usage instructions.
-- [ ] Validate install instructions.
+- [ ] Validate README install flow.
+- [ ] Close the task if install validation passes.
 
-Acceptance:
-- Review: Phase 1 design confirmed by the user.
-- Validation: No code validation needed for design-only phase.
-- GitNexus: N/A; no project code symbol changes.
-- Commit: N/A until implementation is committed.
-- Gaps: README and install validation remain.
+Changes:
+- 2026-05-16 — Use one .claude/WORKFLOW.md overview instead of one file per task.
+- 2026-05-16 — Keep optional attachments only for Level 3 detail that would make the ledger too long.
+
+Prerequisites:
+- README install instructions must match the actual setup command.
 
 Resume next:
-- Validate the README install flow and close Phase 2 if it works.
+- Validate the README install flow and close the task if it works.
 
 ## Backlog / Future
 
-- [ ] Add an optional hook recipe if commit-time checks become necessary.
-- [ ] Add a CLI wrapper if the skill-only workflow becomes insufficient.
+- [ ] Add an optional hook recipe — deferred because install validation does not require it.
+- [ ] Add a CLI wrapper — deferred unless the skill-only workflow becomes insufficient.
 
 ## Completed

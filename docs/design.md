@@ -1,6 +1,6 @@
 # Design
 
-`workflow-ledger` is a lightweight workflow layer for Claude Code projects.
+`workflow-ledger` is a lightweight OpenSpec-style change ledger for Claude Code projects.
 
 ## Problem
 
@@ -8,14 +8,14 @@ Long-running Claude Code tasks can be interrupted, resumed in a new session, or 
 
 ## Approach
 
-Use one milestone overview file, `.claude/WORKFLOW.md`, plus a reusable Claude Code skill.
+Use one single-file change ledger, `.claude/WORKFLOW.md`, plus a reusable Claude Code skill.
 
 The skill teaches Claude how to:
 
 - classify task weight
-- create or update a phased task entry
-- track dependencies and discovered future work
-- record acceptance/review results after each completed phase
+- create or update one intent-first task entry
+- keep `Current todo` mutable as implementation reveals new work
+- track prerequisites, blockers, and discovered future work
 - close completed work into a concise history section
 
 ## Non-goals
@@ -27,7 +27,7 @@ The skill teaches Claude how to:
 
 ## File model
 
-- `.claude/WORKFLOW.md`: project-local milestone ledger.
+- `.claude/WORKFLOW.md`: project-local change ledger.
 - `.claude/skills/workflow-ledger/SKILL.md`: reusable workflow instructions.
 - Optional attachments: only for long Level 3 details.
 
@@ -40,4 +40,4 @@ The skill teaches Claude how to:
 
 ## Recovery model
 
-To resume work, read `.claude/WORKFLOW.md`, find `Active`, follow `Current phase`, unchecked subtasks, dependencies, and `Resume next`. Verify the current repository state before trusting stale ledger entries.
+To resume work, read `.claude/WORKFLOW.md`, find `Active`, follow `Intent`, `Current phase`, `Current todo`, `Prerequisites`, `Blocked by`, and `Resume next`. Verify the current repository state before trusting stale ledger entries.

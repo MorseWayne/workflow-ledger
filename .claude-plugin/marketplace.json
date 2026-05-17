@@ -1,0 +1,18 @@
+{
+  "name": "workflow-ledger-dev",
+  "description": "Development marketplace for workflow-ledger",
+  "owner": {
+    "name": "MorseWayne"
+  },
+  "plugins": [
+    {
+      "name": "workflow-ledger",
+      "description": "Lightweight, recoverable workflow ledger for Claude Code projects",
+      "version": "0.3.5",
+      "source": "./",
+      "author": {
+        "name": "MorseWayne"
+      }
+    }
+  ]
+}

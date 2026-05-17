@@ -2,19 +2,16 @@
 
 ## Active
 
-### WF-2026-05-16-001 — Missing completed section
+### WF-2026-05-16-001 — Missing intent
 Status: In Progress
 Level: 2
 Current phase: Build CLI guardrails
-
-Intent:
-- Provide lightweight CLI guardrails for the workflow ledger.
 
 Current todo:
 - [ ] Implement CLI.
 
 Changes:
-- 2026-05-16 — Fixture intentionally omits ## Completed.
+- 2026-05-16 — Fixture intentionally omits Intent.
 
 Prerequisites:
 - None.
@@ -23,3 +20,5 @@ Resume next:
 - Continue.
 
 ## Backlog / Future
+
+## Completed

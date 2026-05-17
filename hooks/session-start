@@ -8,9 +8,16 @@ if [ ! -f "$ledger" ]; then
   exit 0
 fi
 
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+  cat <<'PLUGIN_JSON'
+{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"Workflow Ledger detected.\n- Read .claude/WORKFLOW.md before resuming tracked work.\n- Check Active tasks, Current phase/current focus, Current todo, and Resume next.\n- Run workflow-ledger doctor if state may be stale."}}
+PLUGIN_JSON
+  exit 0
+fi
+
 printf 'Workflow Ledger detected.\n'
 printf -- '- Read .claude/WORKFLOW.md before resuming tracked work.\n'
-printf -- '- Check Active tasks, Current phase, and Resume next.\n'
+printf -- '- Check Active tasks, Current phase/current focus, Current todo, and Resume next.\n'
 
 if [ -x "$cli" ]; then
   printf -- '- Run .claude/bin/workflow-ledger doctor if state may be stale.\n'

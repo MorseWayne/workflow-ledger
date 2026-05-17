@@ -1,8 +1,8 @@
 # workflow-ledger
 
-A lightweight workflow memory layer for Claude Code.
+A lightweight OpenSpec-style change ledger for Claude Code.
 
-`workflow-ledger` helps Claude Code projects stay **traceable, resumable, and reviewable** without forcing every change through a heavyweight spec process.
+`workflow-ledger` helps Claude Code projects stay **traceable, resumable, and adaptable** without forcing every change through proposal/design/task/spec files.
 
 It is designed for one common failure mode of AI-assisted development:
 
@@ -25,23 +25,22 @@ Many workflow systems solve recoverability by creating a lot of structure:
 
 That is valuable for large feature work, but too heavy for everyday Claude Code development. Most tasks need something smaller:
 
-- one place to see active work
-- phased tasks instead of a flat checklist
-- clear acceptance and review notes
-- visible dependencies and deferred work
+- one place to see the active change intent
+- a mutable current todo instead of a frozen plan
+- visible prerequisites, blockers, and deferred work
 - a resume point for the next session
-- optional deep attachments only when needed
+- a short close summary when work finishes
 
 `workflow-ledger` keeps the parts that matter and removes the parts that slow small tasks down.
 
 ## What it gives you
 
-- **One milestone overview**: `.claude/WORKFLOW.md` is the source of truth.
+- **One change ledger**: `.claude/WORKFLOW.md` is the source of truth.
 - **Task levels**: Level 0-3 classification keeps simple work light and complex work safer.
-- **Phase overview**: tasks keep a short `Phases:` list and expand only the current phase.
-- **Short acceptance evidence**: completed work records review, validation, GitNexus, commit/test evidence, and gaps.
-- **Recoverability**: every active task has `Current phase` and `Resume next`.
-- **Dependency discipline**: blockers become dependencies; non-blocking discoveries go to Backlog/Future.
+- **Intent-first entries**: each active task records one small user-visible intent.
+- **Mutable todo**: `Current todo` can change as requirements, prerequisites, or blockers appear.
+- **Recoverability**: every active task has `Current phase` as current focus and `Resume next`.
+- **Dependency discipline**: blocking prerequisites stay in the active entry; non-blocking discoveries go to Backlog/Future.
 - **Low file count**: no per-task files by default.
 - **Claude Code native**: shipped as a reusable skill, no runtime dependency required.
 
@@ -59,25 +58,25 @@ That is valuable for large feature work, but too heavy for everyday Claude Code 
 
 | Tool / workflow | Best at | Typical shape | Where `workflow-ledger` differs |
 |---|---|---|---|
-| Superpowers-style skills | Teaching Claude repeatable behaviors through reusable skills and checklists | Skill packs with detailed procedures, design/planning loops, and explicit human approval gates | Uses the same skill-native delivery model, but narrows the scope to task memory: one ledger, phase state, resume points, and review summaries |
-| GSD-style planning workflows | Breaking large work into researched phases with verification, security, UI, or evaluation reviews | Multi-agent planning and execution, phase documents, review reports, and stronger process gates | Keeps the recoverability pattern but removes most ceremony for day-to-day work; heavyweight review artifacts stay optional Level 3 attachments |
-| OpenSpec-style spec workflows | Governing product or API changes with proposals, specs, tasks, and archival history | Formal proposal/design/task files with a spec lifecycle | Borrows explicit phases and acceptance thinking, but avoids making every change start with a proposal directory |
+| Superpowers-style skills | Teaching Claude repeatable behaviors through reusable skills and checklists | Skill packs with detailed procedures, design/planning loops, and explicit human approval gates | Uses the same skill-native delivery model, but narrows the scope to task memory: one ledger, change intent, mutable todo, prerequisites, and resume points |
+| GSD-style planning workflows | Breaking large work into researched phases with verification, security, UI, or evaluation reviews | Multi-agent planning and execution, phase documents, review reports, and stronger process gates | Keeps the recoverability pattern but removes most ceremony for day-to-day work; heavyweight review artifacts stay outside the default ledger |
+| OpenSpec-style spec workflows | Governing product or API changes with proposals, specs, tasks, and archival history | Formal proposal/design/task files with a spec lifecycle | Borrows intent/change discipline, but avoids making every change start with proposal/design/tasks/spec files |
 | Claude Code hooks | Deterministically enforcing a rule at tool or lifecycle boundaries | Event handlers for commands such as pre-tool, post-tool, stop, or compact | Treats hooks as optional guardrails; the workflow state remains human-readable in `.claude/WORKFLOW.md` |
 | TodoWrite / session todos | Managing what Claude is doing right now | In-session checklist that is easy to update frequently | Uses TodoWrite for live execution only; the ledger stores durable milestones and handoff context |
 
-In short: Superpowers teaches behaviors, GSD coordinates heavier execution, OpenSpec governs formal changes, hooks enforce events, and TodoWrite tracks the current session. `workflow-ledger` is the smaller missing layer between them: persistent task memory for everyday Claude Code development.
+In short: Superpowers teaches behaviors, GSD coordinates heavier execution, OpenSpec governs formal changes, hooks enforce events, and TodoWrite tracks the current session. `workflow-ledger` is the smaller missing layer between them: a single-file, OpenSpec-lite memory for everyday Claude Code development.
 
 ## Inspired by existing workflows
 
 `workflow-ledger` borrows ideas from spec-driven and skill-driven workflows, but intentionally stays smaller.
 
-- From spec-driven systems such as OpenSpec: phased work, explicit acceptance, resumable state.
+- From spec-driven systems such as OpenSpec: explicit change intent, dependency awareness, and archive-style close summaries.
 - From Claude Code skills and Superpowers-style workflows: reusable procedural guidance that loads when needed.
 - From hooks: the idea that some actions may need hard guardrails, while keeping those guardrails optional.
 
 The key design decision is simple:
 
-> Mandatory project rules stay short. Detailed workflow guidance lives in a skill. Durable progress lives in one ledger file.
+> Mandatory project rules stay short. Detailed workflow guidance lives in a skill. Durable change state lives in one ledger file.
 
 ## Install
 
@@ -168,26 +167,20 @@ A tracked task is organized like this:
 ### WF-2026-05-16-001 — Add streaming usage accounting
 Status: In Progress
 Level: 2
-Current phase: Phase 2 — Implement conversion fix
+Current phase: Implement conversion fix
 
-Goal:
+Intent:
 - Stabilize streaming usage accounting without expanding the ledger into a transcript.
 
-Phases:
-- [x] Phase 1 — Research current flow: confirmed affected provider path.
-- [ ] Phase 2 — Implement conversion fix: current objective.
-- [ ] Phase 3 — Validate and close: expand only when current.
-
-Current phase tasks:
+Current todo:
 - [ ] Update converter.
 - [ ] Add regression test.
 
-Acceptance:
-- Review: Confirmed affected provider path.
-- Validation: Read current tests and conversion code.
-- GitNexus: Impact analysis showed medium risk.
-- Commit: N/A until implementation is committed.
-- Gaps: Implementation pending.
+Changes:
+- 2026-05-16 — Current implementation path narrowed to the provider conversion code.
+
+Prerequisites:
+- Existing streaming usage tests must be checked before editing.
 
 Resume next:
 - Update the converter and add the smallest regression test.
@@ -205,9 +198,9 @@ Resume next:
 ## Design principles
 
 - Keep the overview file useful at a glance.
-- Expand only the current phase; keep future phases coarse until needed.
-- Put acceptance and review results next to completed work.
-- Record why dependencies or future tasks were added.
+- Keep the active intent small and current.
+- Treat `Current todo` as mutable when implementation reveals new work.
+- Record why prerequisites or future tasks were added.
 - Avoid process for process's sake.
 - Prefer one durable ledger over many scattered notes.
 
