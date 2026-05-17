@@ -92,18 +92,19 @@ npx workflow-ledger setup --tool codex
 npx workflow-ledger setup --tool all
 ```
 
-然后在目标项目根目录初始化 ledger：
+然后在目标项目根目录初始化 ledger。裸 `init` 会先交互式选择语言；自动化脚本可传 `--lang en` 或 `--lang zh-CN` 跳过交互：
 
 ```bash
 npx workflow-ledger init
-npx workflow-ledger init --tool claude-code
-npx workflow-ledger init --tool codex
-npx workflow-ledger init --tool all
+npx workflow-ledger init --lang zh-CN
+npx workflow-ledger init --tool claude-code --lang zh-CN
+npx workflow-ledger init --tool codex --lang zh-CN
+npx workflow-ledger init --tool all --lang zh-CN
 ```
 
-`setup` 安装全局工具接入；`init` 创建项目本地 ledger 和短指令片段。`claude-code` 使用 `.claude/WORKFLOW.md`；`codex` 使用 `.workflow-ledger/WORKFLOW.md` 和 `AGENTS.md`。
+`setup` 安装全局工具接入；`init` 创建项目本地 ledger 和短指令片段。`claude-code` 使用 `.claude/WORKFLOW.md`；`codex` 使用 `.workflow-ledger/WORKFLOW.md` 和 `AGENTS.md`。语言选择会影响新创建的 ledger 模板和工具指令片段；已有文件不会被覆盖。
 
-Bash 安装器仍可用于 Claude Code 项目初始化：
+Bash 安装器仍可用于 Claude Code 项目初始化。它内部使用 Node.js CLI，因此需要 Node.js 18 或更高版本：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/MorseWayne/workflow-ledger/main/install.sh | bash
@@ -129,11 +130,11 @@ mkdir -p ~/.claude/skills
 cp -R skills/workflow-ledger ~/.claude/skills/workflow-ledger
 ```
 
-安装器也会把项目本地 CLI 复制到 `.claude/bin/workflow-ledger`：
+CLI 可以检查和汇总 ledger：
 
 ```bash
-.claude/bin/workflow-ledger doctor
-.claude/bin/workflow-ledger list
+npx workflow-ledger doctor
+npx workflow-ledger list
 ```
 
 详见 [docs/cli.md](docs/cli.md)。CLI 是可选保护栏，不替代 skill 工作流。
@@ -221,4 +222,4 @@ Resume next:
 
 ## 当前状态
 
-当前版本同时支持 npm setup 和旧的 Bash installer。CLI 可以为 Claude Code、Codex 或两者安装 Workflow Ledger，同时保持 ledger 格式轻量、可被多个工具读取。
+当前版本以 Node.js CLI 作为 setup、init、doctor、list 和 hooks 的唯一实现。Bash 安装器保留为 Claude Code 项目初始化的轻量 bootstrap wrapper。

@@ -94,18 +94,19 @@ npx workflow-ledger setup --tool codex
 npx workflow-ledger setup --tool all
 ```
 
-Then initialize a project ledger from the target project root:
+Then initialize a project ledger from the target project root. Bare `init` asks you to choose a language first; automation can pass `--lang en` or `--lang zh-CN` to skip the prompt:
 
 ```bash
 npx workflow-ledger init
-npx workflow-ledger init --tool claude-code
-npx workflow-ledger init --tool codex
-npx workflow-ledger init --tool all
+npx workflow-ledger init --lang en
+npx workflow-ledger init --tool claude-code --lang en
+npx workflow-ledger init --tool codex --lang en
+npx workflow-ledger init --tool all --lang en
 ```
 
-`setup` installs global tool integrations. `init` creates project-local ledger files and short instruction snippets. `claude-code` uses `.claude/WORKFLOW.md`; `codex` uses `.workflow-ledger/WORKFLOW.md` plus `AGENTS.md`.
+`setup` installs global tool integrations. `init` creates project-local ledger files and short instruction snippets. `claude-code` uses `.claude/WORKFLOW.md`; `codex` uses `.workflow-ledger/WORKFLOW.md` plus `AGENTS.md`. The language choice controls newly created ledger templates and tool instruction snippets; existing files are not overwritten.
 
-The Bash installer remains available for Claude Code project initialization:
+The Bash installer remains available for Claude Code project initialization. It uses the Node.js CLI internally, so Node.js 18 or newer is required:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/MorseWayne/workflow-ledger/main/install.sh | bash
@@ -131,11 +132,11 @@ mkdir -p ~/.claude/skills
 cp -R skills/workflow-ledger ~/.claude/skills/workflow-ledger
 ```
 
-The installer also copies a project-local CLI to `.claude/bin/workflow-ledger`:
+The CLI can check and summarize the ledger:
 
 ```bash
-.claude/bin/workflow-ledger doctor
-.claude/bin/workflow-ledger list
+npx workflow-ledger doctor
+npx workflow-ledger list
 ```
 
 See [docs/cli.md](docs/cli.md) for command details. The CLI is an optional guardrail; it does not replace the skill workflow.
@@ -223,4 +224,4 @@ Skip it for:
 
 ## Repository status
 
-This version supports both npm setup and the legacy Bash installer. The CLI can install Workflow Ledger for Claude Code, Codex, or both, while keeping the ledger format lightweight and tool-readable.
+This version uses the Node.js CLI as the single implementation for setup, init, doctor, list, and hooks. The Bash installer remains as a small bootstrap wrapper for Claude Code project initialization.

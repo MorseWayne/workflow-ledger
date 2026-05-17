@@ -43,8 +43,7 @@ pass 'claude command is available'
 TEST_PROJECT="$TMP_DIR/project"
 mkdir -p "$TEST_PROJECT/.claude/skills" "$TEST_PROJECT/.claude/bin"
 cp -R "$REPO_ROOT/skills/workflow-ledger" "$TEST_PROJECT/.claude/skills/workflow-ledger"
-cp "$REPO_ROOT/bin/workflow-ledger" "$TEST_PROJECT/.claude/bin/workflow-ledger"
-cp "$REPO_ROOT/bin/workflow-ledger.js" "$TEST_PROJECT/.claude/bin/workflow-ledger.js"
+cp "$REPO_ROOT/bin/workflow-ledger.js" "$TEST_PROJECT/.claude/bin/workflow-ledger"
 chmod +x "$TEST_PROJECT/.claude/bin/workflow-ledger"
 cp "$REPO_ROOT/templates/WORKFLOW.md" "$TEST_PROJECT/.claude/WORKFLOW.md"
 pass 'temporary Claude Code project prepared'
@@ -92,7 +91,7 @@ if grep -Eiq 'tool_use|stdout|stderr' "$LEDGER"; then
 fi
 pass 'ledger avoids transcript markers'
 
-if ! env WORKFLOW_LEDGER_ROOT="$TEST_PROJECT" "$REPO_ROOT/bin/workflow-ledger" doctor >"$TMP_DIR/doctor-out" 2>"$TMP_DIR/doctor-err"; then
+if ! env WORKFLOW_LEDGER_ROOT="$TEST_PROJECT" node "$REPO_ROOT/bin/workflow-ledger.js" doctor >"$TMP_DIR/doctor-out" 2>"$TMP_DIR/doctor-err"; then
   printf 'Doctor output:\n' >&2
   cat "$TMP_DIR/doctor-out" >&2 || true
   cat "$TMP_DIR/doctor-err" >&2 || true

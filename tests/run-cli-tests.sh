@@ -2,12 +2,14 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CLI="$REPO_ROOT/bin/workflow-ledger"
+CLI="$REPO_ROOT/bin/workflow-ledger.js"
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
 pass() { printf 'ok - %s\n' "$1"; }
 fail() { printf 'not ok - %s\n' "$1" >&2; exit 1; }
+
+[ ! -e "$REPO_ROOT/bin/workflow-ledger" ] || fail 'legacy Bash CLI should be removed'
 copy_fixture() {
   local name="$1" dest="$2"
   mkdir -p "$dest"
@@ -67,6 +69,15 @@ cp "$REPO_ROOT/skills/workflow-ledger/templates/WORKFLOW.md" "$root/.claude/skil
 run_ok 'init creates ledger when absent' env WORKFLOW_LEDGER_ROOT="$root" "$CLI" init
 [ -f "$root/.claude/WORKFLOW.md" ] || fail 'init created ledger file'
 
+grep -Fq 'A lightweight OpenSpec-style resume ledger' "$root/.claude/WORKFLOW.md" || fail 'init defaulted to English without TTY'
+
+root="$TMP_DIR/init-zh"
+mkdir -p "$root"
+run_ok 'init creates zh-CN ledger when requested' env WORKFLOW_LEDGER_ROOT="$root" "$CLI" init --lang zh-CN
+[ -f "$root/.claude/WORKFLOW.md" ] || fail 'zh-CN init created ledger file'
+grep -Fq '可恢复台账' "$root/.claude/WORKFLOW.md" || fail 'zh-CN init used Chinese template'
+
+root="$TMP_DIR/init-new"
 printf 'custom ledger\n' > "$root/.claude/WORKFLOW.md"
 run_ok 'init does not overwrite existing ledger' env WORKFLOW_LEDGER_ROOT="$root" "$CLI" init
 grep -Fq 'custom ledger' "$root/.claude/WORKFLOW.md" || fail 'init preserved ledger'

@@ -1,7 +1,7 @@
 {
   "name": "workflow-ledger",
   "description": "Lightweight, recoverable workflow ledger for Claude Code projects",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "author": {
     "name": "MorseWayne"
   },

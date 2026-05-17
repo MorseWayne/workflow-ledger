@@ -1,8 +1,23 @@
 {
   "name": "workflow-ledger",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "Lightweight, recoverable workflow ledger for AI coding agents.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MorseWayne/workflow-ledger.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MorseWayne/workflow-ledger/issues"
+  },
+  "homepage": "https://github.com/MorseWayne/workflow-ledger#readme",
+  "keywords": [
+    "claude-code",
+    "workflow",
+    "ledger",
+    "ai-coding",
+    "skills"
+  ],
   "bin": {
     "workflow-ledger": "bin/workflow-ledger.js"
   },

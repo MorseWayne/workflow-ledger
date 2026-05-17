@@ -16,18 +16,19 @@ npx workflow-ledger setup --tool codex
 npx workflow-ledger setup --tool all
 ```
 
-Then initialize the project ledger from the project root:
+Then initialize the project ledger from the project root. Bare `init` prompts for a language in an interactive terminal; automation can pass `--lang en` or `--lang zh-CN`:
 
 ```bash
 npx workflow-ledger init
-npx workflow-ledger init --tool claude-code
-npx workflow-ledger init --tool codex
-npx workflow-ledger init --tool all
+npx workflow-ledger init --lang en
+npx workflow-ledger init --tool claude-code --lang en
+npx workflow-ledger init --tool codex --lang en
+npx workflow-ledger init --tool all --lang en
 ```
 
-The `claude-code` project adapter creates `.claude/WORKFLOW.md` and updates `CLAUDE.md`. The `codex` project adapter creates `.workflow-ledger/WORKFLOW.md` and updates `AGENTS.md`.
+The `claude-code` project adapter creates `.claude/WORKFLOW.md` and updates `CLAUDE.md`. The `codex` project adapter creates `.workflow-ledger/WORKFLOW.md` and updates `AGENTS.md`. The language option controls newly created templates and instruction snippets.
 
-The Bash installer remains available:
+The Bash installer remains available. It uses the Node.js CLI internally, so Node.js 18 or newer is required:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/MorseWayne/workflow-ledger/main/install.sh | bash
@@ -68,16 +69,16 @@ workflow-ledger list
 workflow-ledger hooks status
 ```
 
-For Claude Code project-local installs, the copied CLI is also available:
+After `setup --tool claude-code`, the same executable is also available at:
 
 ```bash
-.claude/bin/workflow-ledger doctor
+~/.claude/bin/workflow-ledger doctor
 ```
 
 Install optional advisory hooks only when you want SessionStart reminders:
 
 ```bash
-.claude/bin/workflow-ledger hooks install
+workflow-ledger hooks install
 ```
 
 The CLI is a guardrail and summary tool. Claude still uses the `workflow-ledger` skill for the actual workflow.
