@@ -8,17 +8,17 @@ Level: 2
 Current phase: Phase 1 — Build CLI
 
 Phases:
+- [x] Phase 0 — Design CLI: confirmed guardrail scope.
+- [ ] Phase 1 — Build CLI: current objective.
 
-#### Phase 1 — Build CLI
-Status: Done
-Tasks:
-- [x] Implement CLI
+Current phase tasks:
+- [x] Implement CLI.
 
-Acceptance / Review:
+Acceptance:
 - Review: Checked CLI behavior.
 - Validation: Ran tests.
 - GitNexus: N/A.
-- Tests: tests/run-cli-tests.sh.
+- Commit: N/A in fixture.
 - Gaps: None.
 
 Resume next:

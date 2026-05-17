@@ -39,8 +39,8 @@ grep -Fq 'Current phase: Phase 1 — Build CLI' "$TMP_DIR/out" || fail 'list cur
 
 root="$TMP_DIR/missing-acceptance"
 copy_fixture missing-acceptance "$root"
-run_fail 'doctor returns 1 for missing Acceptance / Review' env WORKFLOW_LEDGER_ROOT="$root" "$CLI" doctor
-grep -Fq 'lacks Acceptance / Review' "$TMP_DIR/out" || fail 'missing acceptance error'
+run_fail 'doctor returns 1 for missing Acceptance' env WORKFLOW_LEDGER_ROOT="$root" "$CLI" doctor
+grep -Fq 'lacks Acceptance' "$TMP_DIR/out" || fail 'missing acceptance error'
 
 root="$TMP_DIR/missing-current-phase"
 copy_fixture missing-current-phase "$root"

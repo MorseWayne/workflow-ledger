@@ -1,6 +1,6 @@
 # Workflow Ledger
 
-A lightweight resume-state ledger for Claude Code development work.
+Shared resume-state ledger for AI coding agents.
 
 ## Active
 

@@ -36,8 +36,8 @@
 
 - **单文件总览**：`.claude/WORKFLOW.md` 是任务状态源。
 - **任务分级**：Level 0-3，让简单任务保持轻量，复杂任务更安全。
-- **阶段任务树**：任务按 Phase 和子任务组织，不是一长串平铺列表。
-- **验收紧跟任务**：每个完成阶段后面直接记录 Review、Validation、Tests、Gaps 等总结。
+- **阶段总览**：任务保留短 `Phases:` 列表，只展开当前阶段。
+- **短验收证据**：完成工作记录 Review、Validation、GitNexus、commit/test evidence 和 Gaps。
 - **可恢复点**：每个活跃任务都有 `Current phase` 和 `Resume next`。
 - **依赖管理**：阻塞项变成 dependencies，非阻塞发现进入 Backlog/Future。
 - **低文件数量**：默认不为每个任务创建独立文件。
@@ -79,13 +79,27 @@
 
 ## 安装
 
-在你要接入的项目根目录运行：
+推荐在目标项目根目录使用 npm setup：
+
+```bash
+npx workflow-ledger setup
+```
+
+也可以通过 adapter 安装到多个 AI coding 工具：
+
+```bash
+npx workflow-ledger setup --tool claude-code
+npx workflow-ledger setup --tool codex
+npx workflow-ledger setup --tool all
+```
+
+`claude-code` 会安装 Claude Code skill、项目规则、本地 CLI 和 `.claude/WORKFLOW.md`。`codex` 会安装 `AGENTS.md` 指令和 `.workflow-ledger/WORKFLOW.md`。
+
+如果环境更适合 `curl | bash`，Bash 安装器仍然可用：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/MorseWayne/workflow-ledger/main/install.sh | bash
 ```
-
-这条命令会安装 skill、在缺失时追加 `CLAUDE.md` 片段，并在缺失时创建 `.claude/WORKFLOW.md`。
 
 如果你已经有本地 `workflow-ledger` checkout，也可以直接运行安装脚本：
 
@@ -93,7 +107,7 @@ curl -fsSL https://raw.githubusercontent.com/MorseWayne/workflow-ledger/main/ins
 /path/to/workflow-ledger/install.sh /path/to/your/project
 ```
 
-手动项目级安装：
+手动项目级安装 Claude Code：
 
 ```bash
 mkdir -p .claude/skills
@@ -155,29 +169,27 @@ Status: In Progress
 Level: 2
 Current phase: Phase 2 — Implement conversion fix
 
+Goal:
+- Stabilize streaming usage accounting without expanding the ledger into a transcript.
+
 Phases:
+- [x] Phase 1 — Research current flow: confirmed affected provider path.
+- [ ] Phase 2 — Implement conversion fix: current objective.
+- [ ] Phase 3 — Validate and close: expand only when current.
 
-#### Phase 1 — Research current flow
-Status: Done
-Tasks:
-- [x] Trace request flow
-- [x] Identify affected symbols
+Current phase tasks:
+- [ ] Update converter.
+- [ ] Add regression test.
 
-Acceptance / Review:
+Acceptance:
 - Review: Confirmed affected provider path.
 - Validation: Read current tests and conversion code.
 - GitNexus: Impact analysis showed medium risk.
-- Tests: Not run in research phase.
+- Commit: N/A until implementation is committed.
 - Gaps: Implementation pending.
 
-#### Phase 2 — Implement conversion fix
-Status: In Progress
-Tasks:
-- [ ] Update converter
-- [ ] Add regression test
-
 Resume next:
-- Continue with converter update.
+- Update the converter and add the smallest regression test.
 ```
 
 ## 任务分级
@@ -217,4 +229,4 @@ Resume next:
 
 ## 当前状态
 
-这是一个早期的 skill-first 版本。未来可能增加可选 CLI，但第一版目标是让它能轻松复制到任何 Claude Code 项目中使用。
+当前版本同时支持 npm setup 和旧的 Bash installer。CLI 可以为 Claude Code、Codex 或两者安装 Workflow Ledger，同时保持 ledger 格式轻量、可被多个工具读取。

@@ -2,17 +2,33 @@
 
 ## Install into a project
 
-From the root of the project you want to configure, run:
+Recommended npm setup from the root of the project you want to configure:
+
+```bash
+npx workflow-ledger setup
+```
+
+Install for a specific AI coding tool:
+
+```bash
+npx workflow-ledger setup --tool claude-code
+npx workflow-ledger setup --tool codex
+npx workflow-ledger setup --tool all
+```
+
+The `claude-code` adapter installs `.claude/skills/workflow-ledger`, the `CLAUDE.md` rules snippet, `.claude/bin/workflow-ledger`, and `.claude/WORKFLOW.md`. The `codex` adapter installs the `AGENTS.md` rules snippet and `.workflow-ledger/WORKFLOW.md`.
+
+The Bash installer remains available:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/MorseWayne/workflow-ledger/main/install.sh | bash
 ```
 
-The installer is idempotent:
+The setup flow is idempotent:
 
-- copies the skill to `.claude/skills/workflow-ledger`
-- appends the `CLAUDE.md` snippet only if the Workflow Ledger section is missing
-- creates `.claude/WORKFLOW.md` only if it does not already exist
+- installs the selected tool instructions
+- creates the relevant Workflow Ledger file only if missing
+- preserves existing instruction sections and ledgers
 
 If you already have a local checkout:
 
@@ -20,7 +36,7 @@ If you already have a local checkout:
 /path/to/workflow-ledger/install.sh /path/to/your/project
 ```
 
-Manual install has three required project-local steps: copy the skill, add the `CLAUDE.md` snippet, and create the ledger file.
+Manual Claude Code install has three required project-local steps: copy the skill, add the `CLAUDE.md` snippet, and create the ledger file.
 
 ```bash
 mkdir -p .claude/skills .claude
@@ -36,12 +52,18 @@ cat /path/to/workflow-ledger/examples/claude-project/CLAUDE.md.snippet >> CLAUDE
 
 ## CLI guardrails
 
-After installation, you can run the project-local CLI:
+After installation, you can run the CLI:
+
+```bash
+workflow-ledger doctor
+workflow-ledger list
+workflow-ledger hooks status
+```
+
+For Claude Code project-local installs, the copied CLI is also available:
 
 ```bash
 .claude/bin/workflow-ledger doctor
-.claude/bin/workflow-ledger list
-.claude/bin/workflow-ledger hooks status
 ```
 
 Install optional advisory hooks only when you want SessionStart reminders:
@@ -64,8 +86,8 @@ Claude should:
 
 1. classify the task level
 2. create or update `.claude/WORKFLOW.md`
-3. define phases
-4. expand only the current phase into concrete subtasks
+3. define a short `Phases:` overview
+4. expand only `Current phase tasks`
 5. use TodoWrite for the current session
 
 ## Resume work
@@ -74,7 +96,7 @@ Claude should:
 /workflow-ledger resume
 ```
 
-Claude should read `.claude/WORKFLOW.md`, verify repo state, and continue from `Current phase` and `Resume next`.
+Claude should read `.claude/WORKFLOW.md`, verify repo state, and continue from `Current phase`, `Current phase tasks`, and `Resume next`.
 
 ## Close work
 

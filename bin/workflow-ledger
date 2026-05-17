@@ -136,9 +136,9 @@ cmd_doctor() {
   hook_status="$(hook_status_value)"
 
   local in_active=0 in_backlog=0 in_completed=0
-  local task_title='' task_status='' task_level='' task_current='' task_resume=0 task_phase_count=0
-  local phase_title='' phase_status='' phase_has_acceptance=0 phase_has_review=0 phase_has_validation=0 phase_has_gitnexus=0 phase_has_tests=0 phase_has_gaps=0 phase_has_blocked_by=0
-  local in_acceptance=0
+  local task_title='' task_status='' task_level='' task_current='' task_resume=0 task_phase_count=0 task_line_count=0 task_has_completed_phase=0 task_has_acceptance=0 task_acceptance_bullets=0
+  local phase_title='' phase_status='' phase_has_acceptance=0 phase_has_review=0 phase_has_validation=0 phase_has_gitnexus=0 phase_has_commit=0 phase_has_tests=0 phase_has_gaps=0 phase_has_blocked_by=0
+  local in_acceptance=0 in_phases_overview=0
   local -a phase_titles=()
 
   finish_phase() {
@@ -150,12 +150,14 @@ cmd_doctor() {
     fi
     if [ "$phase_status" = 'Done' ]; then
       if [ "$phase_has_acceptance" -eq 0 ]; then
-        say_error "Done phase '$phase_title' lacks Acceptance / Review."
+        say_error "Done phase '$phase_title' lacks Acceptance."
       else
         [ "$phase_has_review" -eq 1 ] || say_error "Done phase '$phase_title' lacks - Review:."
         [ "$phase_has_validation" -eq 1 ] || say_error "Done phase '$phase_title' lacks - Validation:."
         [ "$phase_has_gitnexus" -eq 1 ] || say_error "Done phase '$phase_title' lacks - GitNexus:."
-        [ "$phase_has_tests" -eq 1 ] || say_error "Done phase '$phase_title' lacks - Tests:."
+        if [ "$phase_has_commit" -eq 0 ] && [ "$phase_has_tests" -eq 0 ]; then
+          say_error "Done phase '$phase_title' lacks - Commit: or - Tests:."
+        fi
         [ "$phase_has_gaps" -eq 1 ] || say_error "Done phase '$phase_title' lacks - Gaps:."
       fi
     fi
@@ -180,14 +182,33 @@ cmd_doctor() {
             break
           fi
         done
-        [ "$found" -eq 1 ] || say_error "Current phase '$task_current' in task '$task_title' does not match a phase heading."
+        [ "$found" -eq 1 ] || say_error "Current phase '$task_current' in task '$task_title' does not match a phase heading or overview item."
       fi
+    fi
+    if [ "$task_has_completed_phase" -eq 1 ]; then
+      if [ "$task_has_acceptance" -eq 0 ]; then
+        say_error "Task '$task_title' has completed phases but lacks Acceptance."
+      else
+        [ "$phase_has_review" -eq 1 ] || say_error "Task '$task_title' Acceptance lacks - Review:."
+        [ "$phase_has_validation" -eq 1 ] || say_error "Task '$task_title' Acceptance lacks - Validation:."
+        [ "$phase_has_gitnexus" -eq 1 ] || say_error "Task '$task_title' Acceptance lacks - GitNexus:."
+        if [ "$phase_has_commit" -eq 0 ] && [ "$phase_has_tests" -eq 0 ]; then
+          say_error "Task '$task_title' Acceptance lacks - Commit: or - Tests:."
+        fi
+        [ "$phase_has_gaps" -eq 1 ] || say_error "Task '$task_title' Acceptance lacks - Gaps:."
+      fi
+    fi
+    if [ "$task_acceptance_bullets" -gt 5 ]; then
+      say_warning "Task '$task_title' Acceptance has more than five bullets."
     fi
     if { [ "$task_level" = '2' ] || [ "$task_level" = '3' ]; } && [ "$task_resume" -eq 0 ]; then
       say_warning "Level $task_level task '$task_title' lacks Resume next."
     fi
     if [ "$task_phase_count" -gt 7 ]; then
       say_warning "Task '$task_title' has more than seven phases."
+    fi
+    if [ "$task_line_count" -gt 80 ]; then
+      say_warning "Task '$task_title' has more than 80 lines."
     fi
   }
 
@@ -223,12 +244,15 @@ cmd_doctor() {
     fi
 
     if [ "$in_active" -eq 1 ]; then
+      if [ -n "$task_title" ]; then
+        task_line_count=$((task_line_count + 1))
+      fi
       if [[ "$line" =~ ^###[[:space:]]+(.+) ]]; then
         finish_task
         active_count=$((active_count + 1))
         task_title="${BASH_REMATCH[1]}"
-        task_status=''; task_level=''; task_current=''; task_resume=0; task_phase_count=0
-        phase_title=''; phase_status=''; phase_titles=()
+        task_status=''; task_level=''; task_current=''; task_resume=0; task_phase_count=0; task_line_count=1; task_has_completed_phase=0; task_has_acceptance=0; task_acceptance_bullets=0
+        phase_title=''; phase_status=''; phase_titles=(); in_acceptance=0; in_phases_overview=0
         continue
       fi
       if [[ "$line" =~ ^####[[:space:]]+(.+) ]]; then
@@ -236,8 +260,28 @@ cmd_doctor() {
         phase_title="${BASH_REMATCH[1]}"
         phase_titles+=("$phase_title")
         task_phase_count=$((task_phase_count + 1))
-        phase_status=''; phase_has_acceptance=0; phase_has_review=0; phase_has_validation=0; phase_has_gitnexus=0; phase_has_tests=0; phase_has_gaps=0; phase_has_blocked_by=0; in_acceptance=0
+        phase_status=''; phase_has_acceptance=0; phase_has_review=0; phase_has_validation=0; phase_has_gitnexus=0; phase_has_commit=0; phase_has_tests=0; phase_has_gaps=0; phase_has_blocked_by=0; in_acceptance=0; in_phases_overview=0
         continue
+      fi
+      if [[ "$line" =~ ^Phases: ]]; then
+        in_phases_overview=1
+        in_acceptance=0
+        continue
+      fi
+      if [ "$in_phases_overview" -eq 1 ]; then
+        if [[ "$line" =~ ^-[[:space:]]+\[([[:space:]xX])\][[:space:]]+([^:]+) ]]; then
+          phase_titles+=("${BASH_REMATCH[2]}")
+          task_phase_count=$((task_phase_count + 1))
+          if [ "${BASH_REMATCH[2]}" = "$task_current" ]; then
+            in_progress_phase_count=$((in_progress_phase_count + 1))
+          fi
+          if [[ "${BASH_REMATCH[1]}" =~ [xX] ]]; then
+            task_has_completed_phase=1
+          fi
+          continue
+        elif [[ -n "$line" && ! "$line" =~ ^-[[:space:]] ]]; then
+          in_phases_overview=0
+        fi
       fi
       if [[ "$line" =~ ^Status:[[:space:]]*(.+) ]]; then
         if [ -n "$phase_title" ]; then
@@ -251,18 +295,23 @@ cmd_doctor() {
       [[ "$line" =~ ^Current[[:space:]]phase:[[:space:]]*(.+) ]] && task_current="${BASH_REMATCH[1]}"
       [[ "$line" =~ ^Resume[[:space:]]next: ]] && task_resume=1
       [[ "$line" =~ ^Blocked[[:space:]]by ]] && phase_has_blocked_by=1
-      if [[ "$line" =~ ^Acceptance[[:space:]]/[[:space:]]Review: ]]; then
+      if [[ "$line" =~ ^Acceptance([[:space:]]/[[:space:]]Review)?: ]]; then
         phase_has_acceptance=1
+        task_has_acceptance=1
         in_acceptance=1
         continue
       fi
       if [ "$in_acceptance" -eq 1 ]; then
+        if [[ "$line" =~ ^-[[:space:]] ]]; then
+          task_acceptance_bullets=$((task_acceptance_bullets + 1))
+        fi
         [[ "$line" =~ ^-[[:space:]]Review: ]] && phase_has_review=1
         [[ "$line" =~ ^-[[:space:]]Validation: ]] && phase_has_validation=1
         [[ "$line" =~ ^-[[:space:]]GitNexus: ]] && phase_has_gitnexus=1
+        [[ "$line" =~ ^-[[:space:]]Commit: ]] && phase_has_commit=1
         [[ "$line" =~ ^-[[:space:]]Tests: ]] && phase_has_tests=1
         [[ "$line" =~ ^-[[:space:]]Gaps: ]] && phase_has_gaps=1
-        if [[ -n "$line" && ! "$line" =~ ^-[[:space:]] && ! "$line" =~ ^Acceptance[[:space:]]/[[:space:]]Review: ]]; then
+        if [[ -n "$line" && ! "$line" =~ ^-[[:space:]] && ! "$line" =~ ^Acceptance([[:space:]]/[[:space:]]Review)?: ]]; then
           in_acceptance=0
         fi
       fi
@@ -272,6 +321,9 @@ cmd_doctor() {
 
   if [ "$backlog_items" -gt 10 ]; then
     say_warning 'Backlog / Future contains more than 10 items.'
+  fi
+  if [ "$active_count" -gt 1 ]; then
+    say_warning 'More than one Active task; include Priority, Blocked by, and Resume next if this is intentional.'
   fi
 
   say_info "Active tasks: $active_count"

@@ -13,13 +13,27 @@ It does not modify your shell `PATH`.
 ## Commands
 
 ```bash
-.claude/bin/workflow-ledger help
-.claude/bin/workflow-ledger init
-.claude/bin/workflow-ledger doctor
-.claude/bin/workflow-ledger list
-.claude/bin/workflow-ledger hooks status
-.claude/bin/workflow-ledger hooks install
+workflow-ledger setup --tool claude-code
+workflow-ledger setup --tool codex
+workflow-ledger setup --tool all
+workflow-ledger help
+workflow-ledger init
+workflow-ledger doctor
+workflow-ledger list
+workflow-ledger hooks status
+workflow-ledger hooks install
 ```
+
+## `setup`
+
+Installs Workflow Ledger into a project through tool adapters.
+
+- `--tool claude-code` installs `.claude/skills/workflow-ledger`, `.claude/bin/workflow-ledger`, `.claude/WORKFLOW.md`, and the `CLAUDE.md` rules snippet.
+- `--tool codex` installs `.workflow-ledger/WORKFLOW.md` and the `AGENTS.md` rules snippet.
+- `--tool all` installs both adapters.
+- `--root PATH` targets a project root other than the current directory.
+
+`setup` is idempotent: it preserves existing ledger files and instruction sections.
 
 ## `init`
 
@@ -38,15 +52,19 @@ Errors return exit code `1`:
 - Missing `.claude/WORKFLOW.md`.
 - Missing core sections: `Active`, `Backlog / Future`, or `Completed`.
 - In Progress task without `Current phase`.
-- `Current phase` that does not exactly match a phase heading after trimming whitespace.
-- Done phase without `Acceptance / Review`.
-- Done phase missing `- Review:`, `- Validation:`, `- GitNexus:`, `- Tests:`, or `- Gaps:`.
+- `Current phase` that does not exactly match a phase heading or `Phases:` overview item.
+- Done phase without `Acceptance` / `Acceptance / Review`.
+- Done phase missing `- Review:`, `- Validation:`, `- GitNexus:`, `- Commit:` or `- Tests:`, or `- Gaps:`.
+- New-style task with completed `Phases:` items but no task-level `Acceptance` evidence.
 
 Warnings do not fail the command:
 
+- More than one Active task.
 - Level 2/3 task without `Resume next`.
 - Ledger older than the latest git commit.
 - Task with more than seven phases.
+- Active task with more than 80 lines.
+- Acceptance with more than five bullets.
 - Blocked phase without a literal `Blocked by` line.
 - Backlog with more than 10 items.
 

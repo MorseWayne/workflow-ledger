@@ -7,14 +7,30 @@
 在你要接入的项目根目录运行：
 
 ```bash
+npx workflow-ledger setup
+```
+
+安装到特定工具：
+
+```bash
+npx workflow-ledger setup --tool claude-code
+npx workflow-ledger setup --tool codex
+npx workflow-ledger setup --tool all
+```
+
+`claude-code` adapter 会安装 `.claude/skills/workflow-ledger`、`CLAUDE.md` 规则片段和 `.claude/WORKFLOW.md`。`codex` adapter 会安装 `AGENTS.md` 规则片段和 `.workflow-ledger/WORKFLOW.md`。
+
+Bash 安装脚本仍然可用：
+
+```bash
 curl -fsSL https://raw.githubusercontent.com/MorseWayne/workflow-ledger/main/install.sh | bash
 ```
 
 安装脚本是幂等的：
 
 - 复制 skill 到 `.claude/skills/workflow-ledger`
-- 只在缺失 Workflow Ledger 段落时追加 `CLAUDE.md` 片段
-- 只在缺失时创建 `.claude/WORKFLOW.md`
+- 安装对应工具的规则片段
+- 只在缺失时创建对应的 Workflow Ledger 文件
 
 如果你已经有本地 checkout：
 
@@ -58,7 +74,7 @@ Claude 应该：
 /workflow-ledger resume
 ```
 
-Claude 应该读取 `.claude/WORKFLOW.md`，检查当前仓库状态，然后根据 `Current phase`、未完成子任务、依赖和 `Resume next` 继续执行。
+Claude 应该读取 `.claude/WORKFLOW.md`，检查当前仓库状态，然后根据 `Current phase`、`Current phase tasks` 和 `Resume next` 继续执行。
 
 ## 更新任务
 
@@ -83,9 +99,9 @@ Claude 应该读取 `.claude/WORKFLOW.md`，检查当前仓库状态，然后根
 Claude 应该：
 
 1. 确认必要阶段已完成，或明确延期。
-2. 给最终阶段补充 `Acceptance / Review`。
+2. 补充短 `Acceptance` 证据。
 3. 把任务从 `Active` 移到 `Completed`。
-4. 记录 commit、验收摘要、缺口和后续任务。
+4. 记录 commit、验收摘要、GitNexus 摘要、缺口和后续任务。
 5. 把未来工作保留在 `Backlog / Future`。
 
 ## 保持轻量

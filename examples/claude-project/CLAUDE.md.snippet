@@ -4,8 +4,8 @@ Use `workflow-ledger` for recoverable development work.
 
 - Classify tasks before executing: Level 0 Q&A, Level 1 lightweight edit, Level 2 standard code work, Level 3 complex work.
 - Maintain `.claude/WORKFLOW.md` for Level 2/3 tasks and for any task the user wants tracked across sessions.
-- Organize tracked work by phases and subtasks, not a flat checklist.
-- Before marking a phase Done, record `Acceptance / Review` with `Review`, `Validation`, `GitNexus`, `Tests`, and `Gaps`; failed validation means the phase stays In Progress or Blocked.
+- Organize tracked work as resume state: short `Phases:` overview, only current phase expanded into tasks, and one concrete `Resume next`.
+- Before marking work Done, record short `Acceptance` evidence with `Review`, `Validation`, `GitNexus`, `Commit` or test evidence, and `Gaps`; failed validation means the task stays In Progress or Blocked.
 - Record dependencies and discovered future tasks; complete prerequisites before blocked work, and defer non-blocking discoveries to Backlog/Future.
 - Use TodoWrite for current-session execution; use `.claude/WORKFLOW.md` for milestone history and resume points.
 - Do not create attachments or extra spec files unless Level 3 work genuinely needs them or the user asks.

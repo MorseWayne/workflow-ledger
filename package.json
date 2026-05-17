@@ -1,0 +1,27 @@
+{
+  "name": "workflow-ledger",
+  "version": "0.3.5",
+  "description": "Lightweight, recoverable workflow ledger for AI coding agents.",
+  "license": "MIT",
+  "bin": {
+    "workflow-ledger": "bin/workflow-ledger.js"
+  },
+  "files": [
+    "bin/",
+    "skills/",
+    "examples/",
+    "templates/",
+    "docs/*.md",
+    "hooks/",
+    "install.sh",
+    "README.md",
+    "README.zh-CN.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "tests/run-cli-tests.sh && node tests/run-node-cli-tests.cjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

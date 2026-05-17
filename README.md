@@ -38,8 +38,8 @@ That is valuable for large feature work, but too heavy for everyday Claude Code 
 
 - **One milestone overview**: `.claude/WORKFLOW.md` is the source of truth.
 - **Task levels**: Level 0-3 classification keeps simple work light and complex work safer.
-- **Phase tree**: tasks are organized as phases with subtasks, not one long flat list.
-- **Acceptance next to work**: each completed phase records review, validation, tests, gaps, and tool findings.
+- **Phase overview**: tasks keep a short `Phases:` list and expand only the current phase.
+- **Short acceptance evidence**: completed work records review, validation, GitNexus, commit/test evidence, and gaps.
 - **Recoverability**: every active task has `Current phase` and `Resume next`.
 - **Dependency discipline**: blockers become dependencies; non-blocking discoveries go to Backlog/Future.
 - **Low file count**: no per-task files by default.
@@ -81,13 +81,27 @@ The key design decision is simple:
 
 ## Install
 
-From the root of the project you want to configure, run:
+Recommended npm setup from the root of the project you want to configure:
+
+```bash
+npx workflow-ledger setup
+```
+
+Multi-agent setup is available through tool adapters:
+
+```bash
+npx workflow-ledger setup --tool claude-code
+npx workflow-ledger setup --tool codex
+npx workflow-ledger setup --tool all
+```
+
+`claude-code` installs the Claude Code skill, project rules, local CLI, and `.claude/WORKFLOW.md`. `codex` installs shared instructions in `AGENTS.md` and `.workflow-ledger/WORKFLOW.md`.
+
+The Bash installer remains available for environments that prefer `curl | bash`:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/MorseWayne/workflow-ledger/main/install.sh | bash
 ```
-
-This installs the skill, appends the `CLAUDE.md` snippet if it is missing, and creates `.claude/WORKFLOW.md` if it does not already exist.
 
 If you already have a local checkout of `workflow-ledger`, you can run the installer directly:
 
@@ -95,7 +109,7 @@ If you already have a local checkout of `workflow-ledger`, you can run the insta
 /path/to/workflow-ledger/install.sh /path/to/your/project
 ```
 
-Manual project-local install:
+Manual project-local install for Claude Code:
 
 ```bash
 mkdir -p .claude/skills
@@ -157,29 +171,27 @@ Status: In Progress
 Level: 2
 Current phase: Phase 2 — Implement conversion fix
 
+Goal:
+- Stabilize streaming usage accounting without expanding the ledger into a transcript.
+
 Phases:
+- [x] Phase 1 — Research current flow: confirmed affected provider path.
+- [ ] Phase 2 — Implement conversion fix: current objective.
+- [ ] Phase 3 — Validate and close: expand only when current.
 
-#### Phase 1 — Research current flow
-Status: Done
-Tasks:
-- [x] Trace request flow
-- [x] Identify affected symbols
+Current phase tasks:
+- [ ] Update converter.
+- [ ] Add regression test.
 
-Acceptance / Review:
+Acceptance:
 - Review: Confirmed affected provider path.
 - Validation: Read current tests and conversion code.
 - GitNexus: Impact analysis showed medium risk.
-- Tests: Not run in research phase.
+- Commit: N/A until implementation is committed.
 - Gaps: Implementation pending.
 
-#### Phase 2 — Implement conversion fix
-Status: In Progress
-Tasks:
-- [ ] Update converter
-- [ ] Add regression test
-
 Resume next:
-- Continue with converter update.
+- Update the converter and add the smallest regression test.
 ```
 
 ## Workflow levels
@@ -219,4 +231,4 @@ Skip it for:
 
 ## Repository status
 
-This is an early, skill-first version. Future versions may add an optional CLI, but the first goal is to keep the tool easy to copy into any Claude Code project.
+This version supports both npm setup and the legacy Bash installer. The CLI can install Workflow Ledger for Claude Code, Codex, or both, while keeping the ledger format lightweight and tool-readable.

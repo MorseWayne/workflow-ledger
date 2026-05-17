@@ -37,31 +37,37 @@ if [ ! -d "$SOURCE_DIR/skills/workflow-ledger" ] || [ ! -f "$SOURCE_DIR/examples
   SOURCE_DIR="$cleanup_dir/workflow-ledger-main"
 fi
 
-mkdir -p "$TARGET_DIR/.claude/skills" "$TARGET_DIR/.claude" "$TARGET_DIR/.claude/bin"
-rm -rf "$TARGET_DIR/.claude/skills/workflow-ledger"
-cp -R "$SOURCE_DIR/skills/workflow-ledger" "$TARGET_DIR/.claude/skills/workflow-ledger"
-cp "$SOURCE_DIR/bin/workflow-ledger" "$TARGET_DIR/.claude/bin/workflow-ledger"
-chmod +x "$TARGET_DIR/.claude/bin/workflow-ledger"
-
-if [ ! -f "$TARGET_DIR/.claude/WORKFLOW.md" ]; then
-  cp "$SOURCE_DIR/skills/workflow-ledger/templates/WORKFLOW.md" "$TARGET_DIR/.claude/WORKFLOW.md"
-  echo "created .claude/WORKFLOW.md"
+if command -v node >/dev/null 2>&1 && [ -f "$SOURCE_DIR/bin/workflow-ledger.js" ]; then
+  node "$SOURCE_DIR/bin/workflow-ledger.js" setup --tool claude-code --root "$TARGET_DIR"
 else
-  echo "kept existing .claude/WORKFLOW.md"
-fi
+  mkdir -p "$TARGET_DIR/.claude/skills" "$TARGET_DIR/.claude" "$TARGET_DIR/.claude/bin"
+  rm -rf "$TARGET_DIR/.claude/skills/workflow-ledger"
+  cp -R "$SOURCE_DIR/skills/workflow-ledger" "$TARGET_DIR/.claude/skills/workflow-ledger"
+  cp "$SOURCE_DIR/bin/workflow-ledger" "$TARGET_DIR/.claude/bin/workflow-ledger"
+  chmod +x "$TARGET_DIR/.claude/bin/workflow-ledger"
 
-if [ ! -f "$TARGET_DIR/CLAUDE.md" ]; then
-  touch "$TARGET_DIR/CLAUDE.md"
-fi
-
-if grep -Fq "$MARKER" "$TARGET_DIR/CLAUDE.md"; then
-  echo "kept existing Workflow Ledger section in CLAUDE.md"
-else
-  if [ -s "$TARGET_DIR/CLAUDE.md" ]; then
-    printf '\n\n' >> "$TARGET_DIR/CLAUDE.md"
+  if [ ! -f "$TARGET_DIR/.claude/WORKFLOW.md" ]; then
+    cp "$SOURCE_DIR/skills/workflow-ledger/templates/WORKFLOW.md" "$TARGET_DIR/.claude/WORKFLOW.md"
+    echo "created .claude/WORKFLOW.md"
+  else
+    echo "kept existing .claude/WORKFLOW.md"
   fi
-  cat "$SOURCE_DIR/examples/claude-project/CLAUDE.md.snippet" >> "$TARGET_DIR/CLAUDE.md"
-  echo "updated CLAUDE.md"
+
+  if [ ! -f "$TARGET_DIR/CLAUDE.md" ]; then
+    touch "$TARGET_DIR/CLAUDE.md"
+  fi
+
+  if grep -Fq "$MARKER" "$TARGET_DIR/CLAUDE.md"; then
+    echo "kept existing Workflow Ledger section in CLAUDE.md"
+  else
+    if [ -s "$TARGET_DIR/CLAUDE.md" ]; then
+      printf '\n\n' >> "$TARGET_DIR/CLAUDE.md"
+    fi
+    cat "$SOURCE_DIR/examples/claude-project/CLAUDE.md.snippet" >> "$TARGET_DIR/CLAUDE.md"
+    echo "updated CLAUDE.md"
+  fi
+
+  echo "installed workflow-ledger for Claude Code"
 fi
 
 echo "installed workflow-ledger into $TARGET_DIR"
