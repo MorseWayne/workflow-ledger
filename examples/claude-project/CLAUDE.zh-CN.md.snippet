@@ -2,6 +2,7 @@
 
 使用 `workflow-ledger` 跟踪可恢复的开发工作。
 
+- Workflow Ledger 只有在项目初始化后才生效。如果缺少 `.claude/WORKFLOW.md`，不要把普通开发任务套用到此工作流；先运行 `npx workflow-ledger init`。
 - 执行前先分级：Level 0 问答/只读/发布 tag，Level 1 轻量编辑，Level 2 标准代码工作，Level 3 复杂工作。
 - Level 2/3 任务，以及用户希望跨会话跟踪的任务，都维护在 `.claude/WORKFLOW.md` 中。
 - 被跟踪的工作只记录恢复状态：`Intent`、可变的 `Current todo`、`Prerequisites`、可选的 `Blocked by`，以及一个具体的 `Resume next`。

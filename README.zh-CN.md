@@ -92,6 +92,8 @@ npx workflow-ledger setup --tool codex
 npx workflow-ledger setup --tool all
 ```
 
+`setup` 只安装工具接入，让支持的 agent 能找到它；它不会让 Workflow Ledger 在所有项目里自动生效。
+
 然后在目标项目根目录初始化 ledger。裸 `init` 会先交互式选择语言；自动化脚本可传 `--lang en` 或 `--lang zh-CN` 跳过交互：
 
 ```bash
@@ -102,7 +104,7 @@ npx workflow-ledger init --tool codex --lang zh-CN
 npx workflow-ledger init --tool all --lang zh-CN
 ```
 
-`setup` 安装全局工具接入；`init` 创建项目本地 ledger 和短指令片段。`claude-code` 使用 `.claude/WORKFLOW.md`；`codex` 使用 `.workflow-ledger/WORKFLOW.md` 和 `AGENTS.md`。语言选择会影响新创建的 ledger 模板和工具指令片段；已有文件不会被覆盖。
+`init` 是启用步骤。它创建项目本地 ledger 和短指令片段。没有 `init` 时，本 skill 对普通开发任务保持 dormant。`claude-code` 使用 `.claude/WORKFLOW.md`；`codex` 使用 `.workflow-ledger/WORKFLOW.md` 和 `AGENTS.md`。语言选择会影响新创建的 ledger 模板和工具指令片段；已有文件不会被覆盖。
 
 Bash 安装器仍可用于 Claude Code 项目初始化。它内部使用 Node.js CLI，因此需要 Node.js 18 或更高版本：
 
@@ -152,7 +154,7 @@ npx workflow-ledger list
 项目接入分两层：
 
 1. 先用 `workflow-ledger setup` 做全局工具接入，让支持的 agent 能找到工作流指令。
-2. 再用 `workflow-ledger init` 初始化项目，让仓库里有 ledger 文件和短工具提醒。
+2. 再用 `workflow-ledger init` 初始化项目，让仓库里有 ledger 文件和短工具提醒。这一步才会让 Workflow Ledger 在该项目生效。
 
 对 Claude Code，`init` 会把 [examples/claude-project/CLAUDE.md.snippet](examples/claude-project/CLAUDE.md.snippet) 加入项目 `CLAUDE.md`，并把 [skills/workflow-ledger/templates/WORKFLOW.md](skills/workflow-ledger/templates/WORKFLOW.md) 创建到 `.claude/WORKFLOW.md`。
 

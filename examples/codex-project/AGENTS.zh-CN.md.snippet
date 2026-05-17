@@ -2,6 +2,7 @@
 
 把 Workflow Ledger 作为 Codex 会话共享的恢复状态。
 
+- Workflow Ledger 只有在项目初始化后才生效。如果缺少 `.workflow-ledger/WORKFLOW.md`，不要把普通开发任务套用到此工作流；先运行 `npx workflow-ledger init --tool codex`。
 - 恢复被跟踪的工作前，先读取 `.workflow-ledger/WORKFLOW.md`。
 - Level 2/3 或跨会话任务记录在 `.workflow-ledger/WORKFLOW.md`。
 - 保持 ledger 简短：当前工作、进展，以及一个具体的 `Resume next` 动作。

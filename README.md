@@ -94,6 +94,8 @@ npx workflow-ledger setup --tool codex
 npx workflow-ledger setup --tool all
 ```
 
+`setup` only installs the integration so supported agents can find it. It does not activate Workflow Ledger in every project.
+
 Then initialize a project ledger from the target project root. Bare `init` asks you to choose a language first; automation can pass `--lang en` or `--lang zh-CN` to skip the prompt:
 
 ```bash
@@ -104,7 +106,7 @@ npx workflow-ledger init --tool codex --lang en
 npx workflow-ledger init --tool all --lang en
 ```
 
-`setup` installs global tool integrations. `init` creates project-local ledger files and short instruction snippets. `claude-code` uses `.claude/WORKFLOW.md`; `codex` uses `.workflow-ledger/WORKFLOW.md` plus `AGENTS.md`. The language choice controls newly created ledger templates and tool instruction snippets; existing files are not overwritten.
+`init` is the activation step. It creates project-local ledger files and short instruction snippets. Without `init`, the skill stays dormant for ordinary development work. `claude-code` uses `.claude/WORKFLOW.md`; `codex` uses `.workflow-ledger/WORKFLOW.md` plus `AGENTS.md`. The language choice controls newly created ledger templates and tool instruction snippets; existing files are not overwritten.
 
 The Bash installer remains available for Claude Code project initialization. It uses the Node.js CLI internally, so Node.js 18 or newer is required:
 
@@ -154,7 +156,7 @@ Then invoke it in Claude Code:
 A project needs two layers:
 
 1. Global tool setup with `workflow-ledger setup` so supported agents can find the workflow instructions.
-2. Project initialization with `workflow-ledger init` so the repository has a ledger file and a short tool-specific reminder.
+2. Project initialization with `workflow-ledger init` so the repository has a ledger file and a short tool-specific reminder. This is what makes Workflow Ledger active for that project.
 
 For Claude Code, `init` adds the snippet from [examples/claude-project/CLAUDE.md.snippet](examples/claude-project/CLAUDE.md.snippet) to your project's `CLAUDE.md` and creates [skills/workflow-ledger/templates/WORKFLOW.md](skills/workflow-ledger/templates/WORKFLOW.md) at `.claude/WORKFLOW.md`.
 

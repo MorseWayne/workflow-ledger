@@ -36,11 +36,11 @@ Installs global Workflow Ledger integrations for supported AI coding tools.
 - `--tool codex` installs the Codex skill to `~/.agents/skills/workflow-ledger` when `~/.codex` exists.
 - `--tool all` configures all detected adapters.
 
-`setup` is environment-level and may skip tools that are not installed.
+`setup` is environment-level and may skip tools that are not installed. It only makes Workflow Ledger available; it does not activate the workflow in every project.
 
 ## `init`
 
-Creates project-local Workflow Ledger files for selected tools. Bare `init` asks for a language when run in a terminal; pass `--lang en` or `--lang zh-CN` for non-interactive use.
+Creates project-local Workflow Ledger files for selected tools. This is the activation step for a repository. Bare `init` asks for a language when run in a terminal; pass `--lang en` or `--lang zh-CN` for non-interactive use.
 
 - `--tool claude-code` creates `.claude/WORKFLOW.md` and updates `CLAUDE.md`.
 - `--tool codex` creates `.workflow-ledger/WORKFLOW.md` and updates `AGENTS.md`.
@@ -49,7 +49,7 @@ Creates project-local Workflow Ledger files for selected tools. Bare `init` asks
 - `--lang zh-CN` creates Simplified Chinese ledger templates and instruction snippets.
 - `--root PATH` targets a project root other than the current directory.
 
-`init` preserves existing ledger files and instruction sections.
+`init` preserves existing ledger files and instruction sections. Without `init`, installed skills stay dormant for ordinary development work.
 
 ## `doctor`
 

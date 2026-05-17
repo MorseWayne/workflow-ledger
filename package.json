@@ -1,6 +1,6 @@
 {
   "name": "workflow-ledger",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "Lightweight, recoverable workflow ledger for AI coding agents.",
   "license": "MIT",
   "repository": {

@@ -2,6 +2,7 @@
 
 Use `workflow-ledger` for recoverable development work.
 
+- Workflow Ledger is active only after project initialization. If `.claude/WORKFLOW.md` is missing, do not use this workflow for ordinary development work; run `npx workflow-ledger init` first.
 - Classify tasks before executing: Level 0 Q&A/read-only/release tagging, Level 1 lightweight edit, Level 2 standard code work, Level 3 complex work.
 - Maintain `.claude/WORKFLOW.md` for Level 2/3 tasks and for any task the user wants tracked across sessions.
 - Organize tracked work as resume state: `Intent`, mutable `Current todo`, `Prerequisites`, optional `Blocked by`, and one concrete `Resume next`.

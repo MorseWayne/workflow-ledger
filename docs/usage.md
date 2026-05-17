@@ -16,6 +16,8 @@ npx workflow-ledger setup --tool codex
 npx workflow-ledger setup --tool all
 ```
 
+`setup` only installs the integration. It does not activate Workflow Ledger in every repository.
+
 Then initialize the project ledger from the project root. Bare `init` prompts for a language in an interactive terminal; automation can pass `--lang en` or `--lang zh-CN`:
 
 ```bash
@@ -26,7 +28,7 @@ npx workflow-ledger init --tool codex --lang en
 npx workflow-ledger init --tool all --lang en
 ```
 
-The `claude-code` project adapter creates `.claude/WORKFLOW.md` and updates `CLAUDE.md`. The `codex` project adapter creates `.workflow-ledger/WORKFLOW.md` and updates `AGENTS.md`. The language option controls newly created templates and instruction snippets.
+The `claude-code` project adapter creates `.claude/WORKFLOW.md` and updates `CLAUDE.md`. The `codex` project adapter creates `.workflow-ledger/WORKFLOW.md` and updates `AGENTS.md`. This `init` step activates Workflow Ledger for the repository. The language option controls newly created templates and instruction snippets.
 
 The Bash installer remains available. It uses the Node.js CLI internally, so Node.js 18 or newer is required:
 

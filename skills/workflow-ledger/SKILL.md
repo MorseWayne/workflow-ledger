@@ -1,7 +1,7 @@
 ---
 name: workflow-ledger
-description: Lightweight OpenSpec-style change ledger for Claude Code. Use when starting, resuming, updating, closing, or reviewing multi-step code work; when todos may change during implementation; when the user wants traceability without heavyweight specs; or when a task may be interrupted and continued later.
-when_to_use: Use for development tasks that need mutable todo tracking, prerequisites, blockers, deferred follow-ups, or cross-session recovery. Skip for pure Q&A and trivial one-step edits unless the user requests tracking. Trigger phrases include "start task", "resume task", "update", "close", "workflow", "ledger", "recover", "continue previous task", "what is left", "review progress".
+description: Lightweight OpenSpec-style change ledger for Claude Code. Active only in projects initialized with workflow-ledger init, or when the user explicitly asks to initialize/setup/install Workflow Ledger.
+when_to_use: Use for development tasks that need mutable todo tracking, prerequisites, blockers, deferred follow-ups, or cross-session recovery only when `.claude/WORKFLOW.md` already exists. If the project is not initialized, do not manage work with this skill; only explain how to run `npx workflow-ledger init`. Skip for pure Q&A and trivial one-step edits unless the user requests tracking. Trigger phrases include "start task", "resume task", "update", "close", "workflow", "ledger", "recover", "continue previous task", "what is left", "review progress", "init workflow-ledger", "setup workflow-ledger".
 argument-hint: start|resume|update|close [task]
 ---
 
@@ -10,6 +10,12 @@ argument-hint: start|resume|update|close [task]
 Use this skill to keep development work recoverable without turning progress notes into a transcript, full spec, or project-management system.
 
 ## Core rule
+
+Activation is explicit. This skill must not manage ordinary development work until the current project has been initialized with Workflow Ledger. Before starting, resuming, updating, or closing tracked work, check for `.claude/WORKFLOW.md`.
+
+- If `.claude/WORKFLOW.md` exists, the project is initialized; follow this skill normally.
+- If `.claude/WORKFLOW.md` is missing and the user asked to initialize, install, or set up Workflow Ledger, guide them to run `npx workflow-ledger init` or the installer.
+- If `.claude/WORKFLOW.md` is missing and the user asked for unrelated development work, do not create a ledger, do not classify the task with this workflow, and do not apply this skill beyond saying the project is not initialized.
 
 Maintain one project overview file at `.claude/WORKFLOW.md` for Level 2/3 work and for any task the user wants tracked. The ledger is compressed resume state: it should answer what the active change is, what changed during execution, what is blocking or required next, and the one next action to take.
 
@@ -116,7 +122,7 @@ Do not move non-blocking discoveries into `Current todo:` just because they were
 
 ## Start a tracked task
 
-1. Locate or create `.claude/WORKFLOW.md` using [templates/WORKFLOW.md](templates/WORKFLOW.md).
+1. Locate `.claude/WORKFLOW.md`. If it is missing, stop and ask the user to run `npx workflow-ledger init`; do not create it implicitly.
 2. Create one `Active` task entry.
 3. Classify Level 0-3.
 4. Write the smallest `Intent:`.

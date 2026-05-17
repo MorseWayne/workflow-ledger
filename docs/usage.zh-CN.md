@@ -18,6 +18,8 @@ npx workflow-ledger setup --tool codex
 npx workflow-ledger setup --tool all
 ```
 
+`setup` 只安装工具接入，不会让 Workflow Ledger 在所有仓库里自动生效。
+
 然后在项目根目录初始化 ledger。裸 `init` 会在交互式终端里询问语言；自动化脚本可传 `--lang en` 或 `--lang zh-CN`：
 
 ```bash
@@ -28,7 +30,7 @@ npx workflow-ledger init --tool codex --lang zh-CN
 npx workflow-ledger init --tool all --lang zh-CN
 ```
 
-`claude-code` 项目 adapter 会创建 `.claude/WORKFLOW.md` 并更新 `CLAUDE.md`。`codex` 项目 adapter 会创建 `.workflow-ledger/WORKFLOW.md` 并更新 `AGENTS.md`。语言选项控制新建模板和工具指令片段。
+`claude-code` 项目 adapter 会创建 `.claude/WORKFLOW.md` 并更新 `CLAUDE.md`。`codex` 项目 adapter 会创建 `.workflow-ledger/WORKFLOW.md` 并更新 `AGENTS.md`。这一步会在当前仓库启用 Workflow Ledger。语言选项控制新建模板和工具指令片段。
 
 Bash 安装脚本仍然可用。它内部使用 Node.js CLI，因此需要 Node.js 18 或更高版本：
 
