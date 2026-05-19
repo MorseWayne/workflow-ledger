@@ -29,11 +29,7 @@ Recommended project setup from the target project root:
 npx workflow-ledger init
 ```
 
-For project-local use, `init` configures these pieces:
-
-1. Copy this skill to `.claude/skills/workflow-ledger`.
-2. Add [examples/claude-project/CLAUDE.md.snippet](../../examples/claude-project/CLAUDE.md.snippet) to the project's `CLAUDE.md` if missing.
-3. Create `.claude/WORKFLOW.md` from [templates/WORKFLOW.md](templates/WORKFLOW.md) if missing.
+`init` installs the project-local skill, adds the Claude project reminder if missing, and creates `.claude/WORKFLOW.md` if missing.
 
 ## Workflow levels
 
@@ -58,50 +54,18 @@ Escalate when you discover cross-file behavior changes, public API changes, fail
 
 ## Ledger structure
 
-`.claude/WORKFLOW.md` should contain:
+`.claude/WORKFLOW.md` contains `Active`, `Backlog / Future`, and `Completed`.
 
-1. `Active` — current change entries.
-2. `Backlog / Future` — discovered tasks not needed for the current intent.
-3. `Completed` — short close summaries.
-
-Each active task should have:
+Active entries should stay small and resumable:
 
 - stable ID: `WF-YYYY-MM-DD-NNN`
-- status, level, dates, and `Current phase` as the current focus
-- `Intent:` as the smallest user-visible goal or change intent
-- `Current todo:` as mutable next work, not a fixed plan
-- `Changes:` for scope, todo, prerequisite, or blocker changes that matter for resume
-- `Prerequisites:` for what must be true before continuing, or `None`
-- optional `Blocked by:` when work cannot continue
+- status, level, started/updated dates, and `Current phase`
+- `Intent:` as the smallest user-visible goal
+- mutable `Current todo:`
+- resume-relevant `Changes:` only
+- `Prerequisites:` or `None`
+- optional `Blocked by:` when blocked
 - one concrete `Resume next:` action
-
-## Task shape
-
-Use one lightweight change entry instead of proposal/design/tasks/spec files:
-
-```markdown
-### WF-YYYY-MM-DD-001 — Task title
-Status: In Progress
-Level: 2
-Started: YYYY-MM-DD
-Last updated: YYYY-MM-DD
-Current phase: Current focus name
-
-Intent:
-- One user-visible goal or change intent.
-
-Current todo:
-- [ ] Mutable next item.
-
-Changes:
-- Scope, todo, prerequisite, or blocker changes that matter for resume.
-
-Prerequisites:
-- Required before current work can proceed, or None.
-
-Resume next:
-- One concrete next action.
-```
 
 If blocked, set `Status: Blocked`, add `Blocked by:`, and make `Resume next` the single unblock action.
 
@@ -152,71 +116,38 @@ Do not move non-blocking discoveries into `Current todo:` just because they were
 
 ## Task merge suggestions
 
-Suggest merging only when related work belongs to the same task family and can be completed and validated in the same iteration. The goal is to reduce task fragmentation without hiding scope.
+Suggest merging only when related items share a task family, can be completed in one iteration, can be validated together, and still form a clear user-visible todo.
 
-A merge suggestion is appropriate when all conditions are true:
-
-- Items share a task family: same feature, command, API, component, state-branch set, documentation pair, or phase goal.
-- Items can be completed in one iteration without adding unrelated work.
-- Items can be validated in one test or review batch.
-- The merged todo remains a clear user-visible goal and preserves resume clarity.
-
-Ask before changing `.claude/WORKFLOW.md`; never merge automatically. Keep the question short, explain why the items are mergeable, and show the proposed compact todo item.
-
-Example:
-
-```markdown
-- [ ] 6.T3 Write status query offline unit test.
-- [ ] 6.T4 Write status query unknown unit test.
-- [ ] 6.T5 Write status query not_deployed unit test.
-```
-
-Suggested merged item:
+Ask before changing `.claude/WORKFLOW.md`; never merge automatically. Keep the question short and show the proposed compact todo item, for example:
 
 ```markdown
 - [ ] 6.T3-T5 Write status query state-branch unit tests: offline, unknown, not_deployed.
 ```
 
-If the user approves, keep one `Active` task, keep `Intent:` as one user-visible goal, replace sibling `Current todo:` items with the compact merged item, and add at most one resume-relevant `Changes:` bullet. Do not leave approved sibling items as separate checklist entries after calling them merged. If the user declines, keep the items separate and continue with the existing prerequisite, Backlog, or new-task rules.
+If the user approves, replace the sibling `Current todo:` items with the compact item and add at most one resume-relevant `Changes:` bullet. If the user declines, keep the items separate.
 
 TodoWrite stays session-local. Ask about the merge before creating noisy separate TodoWrite items; after the user answers, update TodoWrite and the ledger to match the chosen execution shape.
 
 ## User-facing iteration summaries
 
-When finishing an iteration, closing a task, or asking whether to continue, report the result in a concise reader-oriented summary. Do not start with changed files or commands; lead with what this round did and why it mattered.
+Scale the summary to the work. For simple executions such as creating a commit, running one command, confirming status, or making a tiny edit, use a lightweight result: one short sentence or 2-4 compact bullets with only the outcome, validation if relevant, and next action. Do not force the full iteration template onto simple execution results.
 
-Use this order:
+When finishing a substantive iteration, closing a tracked task, or asking whether to continue multi-step work, report the result in a concise reader-oriented summary. Do not start with changed files or commands; lead with what this round did and why it mattered.
+
+Use this order for substantive iteration summaries: `本轮任务` → `本轮目标` → `本轮结论` → `验证` → `Review 发现` → `变更` → `风险` → `提交状态` → `下一步`.
+
+Required headings:
 
 ```markdown
 本轮任务：
-- Briefly name what this round did.
-- Keep each bullet compact.
-
 本轮目标：
-- State the goal at a high level.
-- Use at most three short bullets.
-- Do not include commands, file names, or long explanations.
-
 本轮结论：
-- State completion status and whether it is safe to continue.
-
 验证：
-- Summarize checks that passed, failed, or were not run.
-
 Review 发现：
-- Summarize meaningful review findings, or say none.
-
 变更：
-- Summarize changed files or ledger state without detailed diffs.
-
 风险：
-- Summarize remaining risk, gaps, or none.
-
 提交状态：
-- Include commit hash/status and push state when relevant.
-
 下一步：
-- Name one concrete next action or ask whether to continue.
 ```
 
 Keep the summary compact. Prefer short unordered bullets for `本轮任务` and `本轮目标`; those sections should let the user see the round's work and goal at a glance.

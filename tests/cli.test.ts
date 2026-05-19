@@ -45,6 +45,8 @@ test('skill documents compact iteration summary format', () => {
   for (const heading of ['本轮任务：', '本轮目标：', '本轮结论：', '验证：', 'Review 发现：', '变更：', '风险：', '提交状态：', '下一步：']) {
     assert.ok(skill.includes(heading), `missing summary heading ${heading}`);
   }
+  assert.ok(skill.includes('Do not force the full iteration template onto simple execution results.'));
+  assert.ok(skill.includes('Use this order for substantive iteration summaries:'));
   assert.ok(skill.includes('Prefer short unordered bullets for `本轮任务` and `本轮目标`'));
 });
 
