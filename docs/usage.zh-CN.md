@@ -115,6 +115,26 @@ Claude 应该：
 4. 只记录 outcome、validation 和 gaps。
 5. 把未来工作保留在 `Backlog / Future`。
 
+## 合并建议
+
+当多个任务或 todo 属于同一任务族，并且可以在同一验证批次中确认时，Workflow Ledger 可以建议合并。它会先询问再修改 ledger；如果你拒绝，任务会保持拆分。
+
+例如这些同级 todo：
+
+```markdown
+- [ ] 6.T3 编写 status query offline 单测。
+- [ ] 6.T4 编写 status query unknown 单测。
+- [ ] 6.T5 编写 status query not_deployed 单测。
+```
+
+可以建议合并为一个批量项：
+
+```markdown
+- [ ] 6.T3-T5 编写 status query 状态分支单测：offline、unknown、not_deployed。
+```
+
+Claude 只应在合并后仍然是清晰任务、且能在一次迭代中完成和检查时建议合并。
+
 ## 保持轻量
 
 不要默认创建附件。只有 Level 3 任务需要长调研、详细设计或大量验证输出时，才创建附件并从 `.claude/WORKFLOW.md` 链接过去。

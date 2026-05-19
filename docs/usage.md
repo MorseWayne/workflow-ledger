@@ -117,6 +117,26 @@ Claude should read `.claude/WORKFLOW.md`, verify repo state, and continue from `
 
 Claude should move the task from `Active` to `Completed` and record a short `Close summary` with outcome, validation, and gaps.
 
+## Merge suggestions
+
+Workflow Ledger may suggest merging related work when items belong to the same task family and can be validated together. It asks before changing the ledger; if you decline, the items stay separate.
+
+For example, these sibling todos:
+
+```markdown
+- [ ] 6.T3 Write status query offline unit test.
+- [ ] 6.T4 Write status query unknown unit test.
+- [ ] 6.T5 Write status query not_deployed unit test.
+```
+
+may be suggested as one batch item:
+
+```markdown
+- [ ] 6.T3-T5 Write status query state-branch unit tests: offline, unknown, not_deployed.
+```
+
+Claude should only suggest this when the merged item remains a clear task and can be completed and checked in one iteration.
+
 ## Keep it lightweight
 
 Do not create attachments unless a Level 3 task needs long research, design details, or large validation output.

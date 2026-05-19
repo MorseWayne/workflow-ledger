@@ -107,8 +107,11 @@ If blocked, set `Status: Blocked`, add `Blocked by:`, and make `Resume next` the
 
 ## Handling changing todos
 
-When implementation reveals new work, choose the smallest durable update:
+When implementation reveals new work, first check whether related items belong to the same task family and can be completed and validated in the same iteration. If so, follow `Task merge suggestions` before writing separate ledger or TodoWrite items.
 
+Then choose the smallest durable update:
+
+- Same task family and same validation batch: ask whether to merge before updating `Current todo:`.
 - Same intent and small todo/scope change: update `Current todo:` and add one `Changes:` bullet if it matters for resuming.
 - New prerequisite for the current intent: add it to `Prerequisites:`; if it blocks progress, set `Status: Blocked` and add `Blocked by:`.
 - Useful work that does not block the current intent: add it to `Backlog / Future` with a short deferred reason.
@@ -123,12 +126,13 @@ Do not move non-blocking discoveries into `Current todo:` just because they were
 ## Start a tracked task
 
 1. Locate `.claude/WORKFLOW.md`. If it is missing, stop and ask the user to run `npx workflow-ledger init`; do not create it implicitly.
-2. Create one `Active` task entry.
-3. Classify Level 0-3.
-4. Write the smallest `Intent:`.
-5. Set mutable `Current todo:`.
-6. Record `Prerequisites:` or `None`.
-7. Set `Current phase` as the current focus and write one concrete `Resume next` action.
+2. Before creating a new `Active` entry, compare the requested task with existing `Active` and `Backlog / Future` items. If they form the same task family and validation batch, follow `Task merge suggestions`.
+3. Create one `Active` task entry unless the user approved merging into an existing task.
+4. Classify Level 0-3.
+5. Write the smallest `Intent:`.
+6. Set mutable `Current todo:`.
+7. Record `Prerequisites:` or `None`.
+8. Set `Current phase` as the current focus and write one concrete `Resume next` action.
 
 ## Resume a task
 
@@ -141,9 +145,41 @@ Do not move non-blocking discoveries into `Current todo:` just because they were
 ## Update a task
 
 1. Update only resume-relevant fields.
-2. Prefer changing `Current todo:` over appending a history log.
-3. Add one `Changes:` bullet only when the change explains why the next action or scope differs.
-4. Keep raw command output, transcripts, and implementation details out of the ledger.
+2. When rewriting `Current todo:`, first check whether sibling items can be suggested as one merged task-family item.
+3. Prefer changing `Current todo:` over appending a history log.
+4. Add one `Changes:` bullet only when the change explains why the next action or scope differs.
+5. Keep raw command output, transcripts, and implementation details out of the ledger.
+
+## Task merge suggestions
+
+Suggest merging only when related work belongs to the same task family and can be completed and validated in the same iteration. The goal is to reduce task fragmentation without hiding scope.
+
+A merge suggestion is appropriate when all conditions are true:
+
+- Items share a task family: same feature, command, API, component, state-branch set, documentation pair, or phase goal.
+- Items can be completed in one iteration without adding unrelated work.
+- Items can be validated in one test or review batch.
+- The merged todo remains a clear user-visible goal and preserves resume clarity.
+
+Ask before changing `.claude/WORKFLOW.md`; never merge automatically. Keep the question short, explain why the items are mergeable, and show the proposed compact todo item.
+
+Example:
+
+```markdown
+- [ ] 6.T3 Write status query offline unit test.
+- [ ] 6.T4 Write status query unknown unit test.
+- [ ] 6.T5 Write status query not_deployed unit test.
+```
+
+Suggested merged item:
+
+```markdown
+- [ ] 6.T3-T5 Write status query state-branch unit tests: offline, unknown, not_deployed.
+```
+
+If the user approves, keep one `Active` task, keep `Intent:` as one user-visible goal, replace sibling `Current todo:` items with the compact merged item, and add at most one resume-relevant `Changes:` bullet. Do not leave approved sibling items as separate checklist entries after calling them merged. If the user declines, keep the items separate and continue with the existing prerequisite, Backlog, or new-task rules.
+
+TodoWrite stays session-local. Ask about the merge before creating noisy separate TodoWrite items; after the user answers, update TodoWrite and the ledger to match the chosen execution shape.
 
 ## Close a task
 
