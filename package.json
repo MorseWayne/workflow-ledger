@@ -36,6 +36,7 @@
   "scripts": {
     "clean": "node -e \"for (const f of ['bin/workflow-ledger.js','bin/cli.js']) require('fs').rmSync(f, { force: true })\"",
     "build": "npm run clean && tsc && node -e \"require('fs').chmodSync('bin/workflow-ledger.js', 0o755)\"",
+    "test:ci": "npm run build && tsx --test tests/cli.test.ts",
     "test": "npm run build && tsx --test tests/cli.test.ts tests/claude-code/skill-behavior.test.ts",
     "prepack": "npm run build"
   },

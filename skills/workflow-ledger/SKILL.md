@@ -62,7 +62,7 @@ Active entries should stay small and resumable:
 - status, level, started/updated dates, and `Current phase`
 - `Intent:` as the smallest user-visible goal
 - mutable `Current todo:`
-- resume-relevant `Changes:` only
+- resume-relevant `Changes:` only; use `- None` if there are no resume-relevant changes
 - `Prerequisites:` or `None`
 - optional `Blocked by:` when blocked
 - one concrete `Resume next:` action
@@ -124,7 +124,7 @@ Ask before changing `.claude/WORKFLOW.md`; never merge automatically. Keep the q
 - [ ] 6.T3-T5 Write status query state-branch unit tests: offline, unknown, not_deployed.
 ```
 
-If the user approves, replace the sibling `Current todo:` items with the compact item and add at most one resume-relevant `Changes:` bullet. If the user declines, keep the items separate.
+If the user approves, replace the sibling `Current todo:` items with the compact item and keep a `Changes:` field with at most one resume-relevant bullet. If there is no resume-relevant change, write `- None`. If the user declines, keep the items separate.
 
 TodoWrite stays session-local. Ask about the merge before creating noisy separate TodoWrite items; after the user answers, update TodoWrite and the ledger to match the chosen execution shape.
 
