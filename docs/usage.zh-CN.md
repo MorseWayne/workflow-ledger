@@ -32,22 +32,10 @@ npx workflow-ledger init --tool all --lang zh-CN
 
 `claude-code` 项目 adapter 会创建 `.claude/WORKFLOW.md` 并更新 `CLAUDE.md`。`codex` 项目 adapter 会创建 `.workflow-ledger/WORKFLOW.md` 并更新 `AGENTS.md`。这一步会在当前仓库启用 Workflow Ledger。语言选项控制新建模板和工具指令片段。
 
-Bash 安装脚本仍然可用。它内部使用 Node.js CLI，因此需要 Node.js 18 或更高版本：
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/MorseWayne/workflow-ledger/main/install.sh | bash
-```
-
 初始化流程是幂等的：
 
 - 只在缺失时创建对应的 Workflow Ledger 文件
 - 保留已有工具指令片段和 ledger
-
-如果你已经有本地 checkout：
-
-```bash
-/path/to/workflow-ledger/install.sh /path/to/your/project
-```
 
 手动安装仍然有三个项目本地必需步骤：复制 skill、追加 `CLAUDE.md` 规则片段、创建 ledger 文件。
 

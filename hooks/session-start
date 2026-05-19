@@ -1,28 +1,30 @@
-#!/usr/bin/env bash
-set -u
+#!/usr/bin/env node
+const fs = require('node:fs');
 
-ledger=".claude/WORKFLOW.md"
-cli=".claude/bin/workflow-ledger"
+const ledger = '.claude/WORKFLOW.md';
+const cli = '.claude/bin/workflow-ledger';
 
-if [ ! -f "$ledger" ]; then
-  exit 0
-fi
+if (!fs.existsSync(ledger)) {
+  process.exit(0);
+}
 
-if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
-  cat <<'PLUGIN_JSON'
-{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"Workflow Ledger detected.\n- Read .claude/WORKFLOW.md before resuming tracked work.\n- Check Active tasks, Current phase/current focus, Current todo, and Resume next.\n- Run workflow-ledger doctor if state may be stale."}}
-PLUGIN_JSON
-  exit 0
-fi
+if (process.env.CLAUDE_PLUGIN_ROOT) {
+  process.stdout.write(`${JSON.stringify({
+    hookSpecificOutput: {
+      hookEventName: 'SessionStart',
+      additionalContext: 'Workflow Ledger detected.\n- Read .claude/WORKFLOW.md before resuming tracked work.\n- Check Active tasks, Current phase/current focus, Current todo, and Resume next.\n- Run workflow-ledger doctor if state may be stale.',
+    },
+  })}\n`);
+  process.exit(0);
+}
 
-printf 'Workflow Ledger detected.\n'
-printf -- '- Read .claude/WORKFLOW.md before resuming tracked work.\n'
-printf -- '- Check Active tasks, Current phase/current focus, Current todo, and Resume next.\n'
+process.stdout.write('Workflow Ledger detected.\n');
+process.stdout.write('- Read .claude/WORKFLOW.md before resuming tracked work.\n');
+process.stdout.write('- Check Active tasks, Current phase/current focus, Current todo, and Resume next.\n');
 
-if [ -x "$cli" ]; then
-  printf -- '- Run .claude/bin/workflow-ledger doctor if state may be stale.\n'
-else
-  printf -- '- Run workflow-ledger doctor if the project CLI is available.\n'
-fi
-
-exit 0
+try {
+  fs.accessSync(cli, fs.constants.X_OK);
+  process.stdout.write('- Run .claude/bin/workflow-ledger doctor if state may be stale.\n');
+} catch {
+  process.stdout.write('- Run workflow-ledger doctor if the project CLI is available.\n');
+}

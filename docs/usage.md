@@ -30,22 +30,10 @@ npx workflow-ledger init --tool all --lang en
 
 The `claude-code` project adapter creates `.claude/WORKFLOW.md` and updates `CLAUDE.md`. The `codex` project adapter creates `.workflow-ledger/WORKFLOW.md` and updates `AGENTS.md`. This `init` step activates Workflow Ledger for the repository. The language option controls newly created templates and instruction snippets.
 
-The Bash installer remains available. It uses the Node.js CLI internally, so Node.js 18 or newer is required:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/MorseWayne/workflow-ledger/main/install.sh | bash
-```
-
 The init flow is idempotent:
 
 - creates the relevant Workflow Ledger file only if missing
 - preserves existing instruction sections and ledgers
-
-If you already have a local checkout:
-
-```bash
-/path/to/workflow-ledger/install.sh /path/to/your/project
-```
 
 Manual Claude Code install has three required project-local steps: copy the skill, add the `CLAUDE.md` snippet, and create the ledger file.
 

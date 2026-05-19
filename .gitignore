@@ -4,4 +4,6 @@ Generated local artifacts and editor files.
 
 .DS_Store
 *.swp
-*.tmp
+node_modules/
+bin/*.js
+bin/*.js.map

@@ -23,13 +23,13 @@ Do not use the ledger for full operation logs, detailed diffs, raw GitNexus outp
 
 ## Project installation contract
 
-Recommended one-command project setup from the target project root:
+Recommended project setup from the target project root:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/MorseWayne/workflow-ledger/main/install.sh | bash
+npx workflow-ledger init
 ```
 
-For project-local use, the installer configures all three pieces:
+For project-local use, `init` configures these pieces:
 
 1. Copy this skill to `.claude/skills/workflow-ledger`.
 2. Add [examples/claude-project/CLAUDE.md.snippet](../../examples/claude-project/CLAUDE.md.snippet) to the project's `CLAUDE.md` if missing.
@@ -180,6 +180,46 @@ Suggested merged item:
 If the user approves, keep one `Active` task, keep `Intent:` as one user-visible goal, replace sibling `Current todo:` items with the compact merged item, and add at most one resume-relevant `Changes:` bullet. Do not leave approved sibling items as separate checklist entries after calling them merged. If the user declines, keep the items separate and continue with the existing prerequisite, Backlog, or new-task rules.
 
 TodoWrite stays session-local. Ask about the merge before creating noisy separate TodoWrite items; after the user answers, update TodoWrite and the ledger to match the chosen execution shape.
+
+## User-facing iteration summaries
+
+When finishing an iteration, closing a task, or asking whether to continue, report the result in a concise reader-oriented summary. Do not start with changed files or commands; lead with what this round did and why it mattered.
+
+Use this order:
+
+```markdown
+本轮任务：
+- Briefly name what this round did.
+- Keep each bullet compact.
+
+本轮目标：
+- State the goal at a high level.
+- Use at most three short bullets.
+- Do not include commands, file names, or long explanations.
+
+本轮结论：
+- State completion status and whether it is safe to continue.
+
+验证：
+- Summarize checks that passed, failed, or were not run.
+
+Review 发现：
+- Summarize meaningful review findings, or say none.
+
+变更：
+- Summarize changed files or ledger state without detailed diffs.
+
+风险：
+- Summarize remaining risk, gaps, or none.
+
+提交状态：
+- Include commit hash/status and push state when relevant.
+
+下一步：
+- Name one concrete next action or ask whether to continue.
+```
+
+Keep the summary compact. Prefer short unordered bullets for `本轮任务` and `本轮目标`; those sections should let the user see the round's work and goal at a glance.
 
 ## Close a task
 

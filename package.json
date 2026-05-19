@@ -1,6 +1,6 @@
 {
   "name": "workflow-ledger",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "description": "Lightweight, recoverable workflow ledger for AI coding agents.",
   "license": "MIT",
   "repository": {
@@ -29,15 +29,22 @@
     "docs/*.md",
     "hooks/",
     ".claude-plugin/",
-    "install.sh",
     "README.md",
     "README.zh-CN.md",
     "LICENSE"
   ],
   "scripts": {
-    "test": "tests/run-cli-tests.sh && node tests/run-node-cli-tests.cjs && bash tests/claude-code/run-skill-behavior-test.sh"
+    "clean": "node -e \"for (const f of ['bin/workflow-ledger.js','bin/cli.js']) require('fs').rmSync(f, { force: true })\"",
+    "build": "npm run clean && tsc && node -e \"require('fs').chmodSync('bin/workflow-ledger.js', 0o755)\"",
+    "test": "npm run build && tsx --test tests/cli.test.ts tests/claude-code/skill-behavior.test.ts",
+    "prepack": "npm run build"
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.0",
+    "tsx": "^4.22.2",
+    "typescript": "^6.0.3"
   }
 }

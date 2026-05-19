@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
-const readline = require('readline/promises');
-const { stdin: input, stdout: output } = require('process');
-const { spawnSync } = require('child_process');
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import readline from 'node:readline/promises';
+import { stdin as input, stdout as output } from 'node:process';
+import { spawnSync } from 'node:child_process';
 
 const repoRoot = path.resolve(__dirname, '..');
 
-function defaultTargetRoot() {
+function defaultTargetRoot(): string {
   if (process.env.WORKFLOW_LEDGER_ROOT) return path.resolve(process.env.WORKFLOW_LEDGER_ROOT);
   if (path.basename(__dirname) === 'bin' && path.basename(path.dirname(__dirname)) === '.claude') {
     return path.resolve(__dirname, '..', '..');
@@ -18,7 +18,7 @@ function defaultTargetRoot() {
 
 const targetRoot = defaultTargetRoot();
 
-const toolAliases = new Map([
+const toolAliases = new Map<string, string>([
   ['cc', 'claude-code'],
   ['claude', 'claude-code'],
   ['claude-code', 'claude-code'],
@@ -26,7 +26,7 @@ const toolAliases = new Map([
   ['all', 'all'],
 ]);
 
-const languageAliases = new Map([
+const languageAliases = new Map<string, string>([
   ['en', 'en'],
   ['english', 'en'],
   ['zh', 'zh-CN'],
@@ -37,7 +37,7 @@ const languageAliases = new Map([
   ['中文', 'zh-CN'],
 ]);
 
-function printHelp() {
+function printHelp(): void {
   console.log(`workflow-ledger — lightweight workflow guardrails for AI coding agents
 
 Usage:
@@ -52,7 +52,15 @@ Usage:
 setup installs global tool integrations. init creates project-local ledger files.`);
 }
 
-function parseArgs(argv) {
+interface CliArgs {
+  command: string;
+  tool: string;
+  language: string;
+  root: string;
+  interactiveLanguage: boolean;
+}
+
+function parseArgs(argv: string[]): CliArgs {
   const args = { command: argv[0] || 'help', tool: 'claude-code', language: '', root: targetRoot, interactiveLanguage: argv[0] === 'init' };
   for (let i = 1; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -85,11 +93,11 @@ function parseArgs(argv) {
   return args;
 }
 
-function ensureDir(dir) {
+function ensureDir(dir: string): void {
   fs.mkdirSync(dir, { recursive: true });
 }
 
-function dirExists(dir) {
+function dirExists(dir: string): boolean {
   try {
     return fs.statSync(dir).isDirectory();
   } catch {
@@ -97,7 +105,13 @@ function dirExists(dir) {
   }
 }
 
-function copyFileIfMissing(src, dest, createdMessage, keptMessage, result) {
+interface CommandResult {
+  configured: string[];
+  skipped: string[];
+  errors: string[];
+}
+
+function copyFileIfMissing(src: string, dest: string, createdMessage: string, keptMessage: string, result: CommandResult): void {
   if (fs.existsSync(dest)) {
     result.configured.push(keptMessage);
     return;
@@ -107,19 +121,19 @@ function copyFileIfMissing(src, dest, createdMessage, keptMessage, result) {
   result.configured.push(createdMessage);
 }
 
-function copyDir(src, dest) {
+function copyDir(src: string, dest: string): void {
   fs.rmSync(dest, { recursive: true, force: true });
   ensureDir(path.dirname(dest));
   fs.cpSync(src, dest, { recursive: true });
 }
 
-function copyCli(dest) {
+function copyCli(dest: string): void {
   ensureDir(path.dirname(dest));
   fs.copyFileSync(__filename, dest);
   fs.chmodSync(dest, 0o755);
 }
 
-function appendSnippet(marker, snippetPath, targetPath, updatedMessage, keptMessage, result) {
+function appendSnippet(marker: string, snippetPath: string, targetPath: string, updatedMessage: string, keptMessage: string, result: CommandResult): void {
   let current = '';
   if (fs.existsSync(targetPath)) {
     current = fs.readFileSync(targetPath, 'utf8');
@@ -135,7 +149,7 @@ function appendSnippet(marker, snippetPath, targetPath, updatedMessage, keptMess
   result.configured.push(updatedMessage);
 }
 
-function validateTool(tool) {
+function validateTool(tool: string): boolean {
   if (!['claude-code', 'codex', 'all'].includes(tool)) {
     console.error(`error: unknown tool '${tool}'. Expected claude-code, codex, or all.`);
     process.exitCode = 1;
@@ -144,7 +158,7 @@ function validateTool(tool) {
   return true;
 }
 
-function validateLanguage(language) {
+function validateLanguage(language: string): boolean {
   if (!['en', 'zh-CN'].includes(language)) {
     console.error(`error: unknown language '${language}'. Expected en or zh-CN.`);
     process.exitCode = 1;
@@ -153,7 +167,7 @@ function validateLanguage(language) {
   return true;
 }
 
-async function chooseLanguage() {
+async function chooseLanguage(): Promise<string> {
   if (!process.stdin.isTTY || !process.stdout.isTTY) return 'en';
   const rl = readline.createInterface({ input, output });
   try {
@@ -166,15 +180,15 @@ async function chooseLanguage() {
   }
 }
 
-function localizedPath(...segments) {
+function localizedPath(...segments: string[]): string {
   return path.join(repoRoot, ...segments);
 }
 
-function createResult() {
+function createResult(): CommandResult {
   return { configured: [], skipped: [], errors: [] };
 }
 
-function printResult(title, result) {
+function printResult(title: string, result: CommandResult): void {
   console.log(`\n${title}`);
   if (result.configured.length > 0) {
     console.log('Configured:');
@@ -191,7 +205,11 @@ function printResult(title, result) {
   }
 }
 
-function setupClaudeCodeGlobal(result) {
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function setupClaudeCodeGlobal(result: CommandResult): void {
   const claudeDir = path.join(os.homedir(), '.claude');
   if (!dirExists(claudeDir)) {
     result.skipped.push('Claude Code (not installed)');
@@ -205,11 +223,11 @@ function setupClaudeCodeGlobal(result) {
     result.configured.push('Claude Code skill → ~/.claude/skills/workflow-ledger');
     result.configured.push('Claude Code local CLI → ~/.claude/bin/workflow-ledger');
   } catch (error) {
-    result.errors.push(`Claude Code: ${error.message}`);
+    result.errors.push(`Claude Code: ${errorMessage(error)}`);
   }
 }
 
-function setupCodexGlobal(result) {
+function setupCodexGlobal(result: CommandResult): void {
   const codexDir = path.join(os.homedir(), '.codex');
   if (!dirExists(codexDir)) {
     result.skipped.push('Codex (not installed)');
@@ -221,11 +239,11 @@ function setupCodexGlobal(result) {
     fs.copyFileSync(path.join(repoRoot, 'examples', 'codex-project', 'AGENTS.md.snippet'), path.join(skillDir, 'SKILL.md'));
     result.configured.push('Codex skill → ~/.agents/skills/workflow-ledger');
   } catch (error) {
-    result.errors.push(`Codex: ${error.message}`);
+    result.errors.push(`Codex: ${errorMessage(error)}`);
   }
 }
 
-function setup(args) {
+function setup(args: CliArgs): void {
   if (!validateTool(args.tool)) return;
   const result = createResult();
   if (args.tool === 'claude-code' || args.tool === 'all') setupClaudeCodeGlobal(result);
@@ -234,11 +252,11 @@ function setup(args) {
   console.log('\nNext: run workflow-ledger init in a project.');
 }
 
-function templateFile(language, englishPath, chinesePath) {
+function templateFile(language: string, englishPath: string[], chinesePath: string[]): string {
   return language === 'zh-CN' ? localizedPath(...chinesePath) : localizedPath(...englishPath);
 }
 
-function initClaudeCodeProject(root, language, result) {
+function initClaudeCodeProject(root: string, language: string, result: CommandResult): void {
   const claudeDir = path.join(root, '.claude');
   ensureDir(claudeDir);
   copyFileIfMissing(
@@ -266,7 +284,7 @@ function initClaudeCodeProject(root, language, result) {
   );
 }
 
-function initCodexProject(root, language, result) {
+function initCodexProject(root: string, language: string, result: CommandResult): void {
   const ledgerDir = path.join(root, '.workflow-ledger');
   ensureDir(ledgerDir);
   copyFileIfMissing(
@@ -294,7 +312,7 @@ function initCodexProject(root, language, result) {
   );
 }
 
-async function initProject(args) {
+async function initProject(args: CliArgs): Promise<void> {
   if (!validateTool(args.tool)) return;
   if (!validateLanguage(args.language)) return;
   const language = args.interactiveLanguage ? await chooseLanguage() : args.language;
@@ -305,19 +323,19 @@ async function initProject(args) {
   printResult('Workflow Ledger Init', result);
 }
 
-function ledgerPath(root = targetRoot) {
+function ledgerPath(root = targetRoot): string {
   return path.join(root, '.claude', 'WORKFLOW.md');
 }
 
-function hooksJsonPath(root = targetRoot) {
+function hooksJsonPath(root = targetRoot): string {
   return path.join(root, '.claude', 'hooks', 'hooks.json');
 }
 
-function hookScriptPath(root = targetRoot) {
+function hookScriptPath(root = targetRoot): string {
   return path.join(root, '.claude', 'hooks', 'session-start');
 }
 
-function isExecutable(filePath) {
+function isExecutable(filePath: string): boolean {
   try {
     fs.accessSync(filePath, fs.constants.X_OK);
     return true;
@@ -326,7 +344,7 @@ function isExecutable(filePath) {
   }
 }
 
-function hookStatusValue(root = targetRoot) {
+function hookStatusValue(root = targetRoot): string {
   const hooksJson = hooksJsonPath(root);
   const hookScript = hookScriptPath(root);
   if (!fs.existsSync(hooksJson) || !fs.existsSync(hookScript)) return 'not installed';
@@ -337,31 +355,48 @@ function hookStatusValue(root = targetRoot) {
   return 'incomplete';
 }
 
-function hasSection(lines, name) {
+function hasSection(lines: string[], name: string): boolean {
   return lines.some((line) => new RegExp(`^##\\s+${name}\\s*$`).test(line));
 }
 
-function formatLocalTimestamp(epochSeconds) {
+function formatLocalTimestamp(epochSeconds: number): string {
   const date = new Date(epochSeconds * 1000);
-  const pad = (value) => String(value).padStart(2, '0');
+  const pad = (value: number): string => String(value).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
-function cmdDoctor() {
+interface LedgerTask {
+  title: string;
+  status: string;
+  level: string;
+  currentPhase: string;
+  hasIntent: boolean;
+  hasTodo: boolean;
+  hasChanges: boolean;
+  hasPrerequisites: boolean;
+  hasResume: boolean;
+  hasBlockedBy: boolean;
+  hasCloseSummary: boolean;
+  lineCount: number;
+}
+
+function cmdDoctor(): void {
   const ledger = ledgerPath();
   let errorCount = 0;
   let warningCount = 0;
-  const out = [];
+  const out: string[] = [];
 
-  const sayError = (message) => {
+  const sayError = (message: string): void => {
     errorCount += 1;
     out.push(`ERROR: ${message}`);
   };
-  const sayWarning = (message) => {
+  const sayWarning = (message: string): void => {
     warningCount += 1;
     out.push(`WARNING: ${message}`);
   };
-  const sayInfo = (message) => out.push(`INFO: ${message}`);
+  const sayInfo = (message: string): void => {
+    out.push(`INFO: ${message}`);
+  };
 
   if (!fs.existsSync(ledger)) {
     sayError('.claude/WORKFLOW.md is missing.');
@@ -391,9 +426,9 @@ function cmdDoctor() {
   let inActive = false;
   let inBacklog = false;
   let inCompleted = false;
-  let task = null;
+  let task: LedgerTask | null = null;
 
-  const finishTask = () => {
+  const finishTask = (): void => {
     if (!task) return;
     if (task.status === 'In Progress') {
       if (!task.currentPhase) sayError(`In Progress task '${task.title}' lacks Current phase.`);
@@ -525,7 +560,7 @@ function cmdDoctor() {
   console.log(out.join('\n'));
 }
 
-function cmdList() {
+function cmdList(): void {
   const ledger = ledgerPath();
   if (!fs.existsSync(ledger)) {
     console.error('No .claude/WORKFLOW.md found; no tasks to list.');
@@ -642,7 +677,7 @@ function cmdList() {
   console.log(out.join('\n'));
 }
 
-function cmdHooksStatus() {
+function cmdHooksStatus(): void {
   console.log(`hooks: ${hookStatusValue()}`);
   console.log(`hooks.json: ${hooksJsonPath()}`);
   console.log(`session-start: ${hookScriptPath()}`);
@@ -660,37 +695,41 @@ const DEFAULT_HOOKS_JSON = `{
 }
 `;
 
-const DEFAULT_SESSION_START_HOOK = `#!/usr/bin/env bash
-set -u
+const DEFAULT_SESSION_START_HOOK = [
+  '#!/usr/bin/env node',
+  "const fs = require('node:fs');",
+  '',
+  "const ledger = '.claude/WORKFLOW.md';",
+  "const cli = '.claude/bin/workflow-ledger';",
+  '',
+  'if (!fs.existsSync(ledger)) {',
+  '  process.exit(0);',
+  '}',
+  '',
+  'if (process.env.CLAUDE_PLUGIN_ROOT) {',
+  '  process.stdout.write(JSON.stringify({',
+  '    hookSpecificOutput: {',
+  "      hookEventName: 'SessionStart',",
+  "      additionalContext: 'Workflow Ledger detected.\\n- Read .claude/WORKFLOW.md before resuming tracked work.\\n- Check Active tasks, Current phase/current focus, Current todo, and Resume next.\\n- Run workflow-ledger doctor if state may be stale.',",
+  '    },',
+  "  }) + '\\n');",
+  '  process.exit(0);',
+  '}',
+  '',
+  "process.stdout.write('Workflow Ledger detected.\\n');",
+  "process.stdout.write('- Read .claude/WORKFLOW.md before resuming tracked work.\\n');",
+  "process.stdout.write('- Check Active tasks, Current phase/current focus, Current todo, and Resume next.\\n');",
+  '',
+  'try {',
+  '  fs.accessSync(cli, fs.constants.X_OK);',
+  "  process.stdout.write('- Run .claude/bin/workflow-ledger doctor if state may be stale.\\n');",
+  '} catch {',
+  "  process.stdout.write('- Run workflow-ledger doctor if the project CLI is available.\\n');",
+  '}',
+  '',
+].join('\n');
 
-ledger=".claude/WORKFLOW.md"
-cli=".claude/bin/workflow-ledger"
-
-if [ ! -f "$ledger" ]; then
-  exit 0
-fi
-
-if [ -n "\${CLAUDE_PLUGIN_ROOT:-}" ]; then
-  cat <<'PLUGIN_JSON'
-{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"Workflow Ledger detected.\\n- Read .claude/WORKFLOW.md before resuming tracked work.\\n- Check Active tasks, Current phase/current focus, Current todo, and Resume next.\\n- Run workflow-ledger doctor if state may be stale."}}
-PLUGIN_JSON
-  exit 0
-fi
-
-printf 'Workflow Ledger detected.\\n'
-printf -- '- Read .claude/WORKFLOW.md before resuming tracked work.\\n'
-printf -- '- Check Active tasks, Current phase/current focus, Current todo, and Resume next.\\n'
-
-if [ -x "$cli" ]; then
-  printf -- '- Run .claude/bin/workflow-ledger doctor if state may be stale.\\n'
-else
-  printf -- '- Run workflow-ledger doctor if the project CLI is available.\\n'
-fi
-
-exit 0
-`;
-
-function cmdHooksInstall() {
+function cmdHooksInstall(): void {
   const targetDir = path.join(targetRoot, '.claude', 'hooks');
   try {
     ensureDir(targetDir);
@@ -718,7 +757,7 @@ function cmdHooksInstall() {
   }
 }
 
-function runCommand(argv) {
+async function runCommand(argv: string[]): Promise<void> {
   const command = argv[0] || 'help';
   if (command === 'help' || command === '-h' || command === '--help') {
     printHelp();
@@ -751,6 +790,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(error.message);
+  console.error(errorMessage(error));
   process.exitCode = 1;
 });

@@ -25,6 +25,9 @@ jobs:
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
 
+      - name: Install dependencies
+        run: npm ci
+
       - name: Validate tag matches package version
         run: |
           PACKAGE_VERSION="$(node -p "require('./package.json').version")"
@@ -35,7 +38,7 @@ jobs:
           fi
 
       - name: Run release tests
-        run: tests/run-cli-tests.sh && node tests/run-node-cli-tests.cjs
+        run: npm test
 
       - name: Publish package
         run: npm publish --access public

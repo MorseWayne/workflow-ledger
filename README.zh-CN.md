@@ -106,17 +106,7 @@ npx workflow-ledger init --tool all --lang zh-CN
 
 `init` 是启用步骤。它创建项目本地 ledger 和短指令片段。没有 `init` 时，本 skill 对普通开发任务保持 dormant。`claude-code` 使用 `.claude/WORKFLOW.md`；`codex` 使用 `.workflow-ledger/WORKFLOW.md` 和 `AGENTS.md`。语言选择会影响新创建的 ledger 模板和工具指令片段；已有文件不会被覆盖。
 
-Bash 安装器仍可用于 Claude Code 项目初始化。它内部使用 Node.js CLI，因此需要 Node.js 18 或更高版本：
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/MorseWayne/workflow-ledger/main/install.sh | bash
-```
-
-如果你已经有本地 `workflow-ledger` checkout，也可以直接运行安装脚本：
-
-```bash
-/path/to/workflow-ledger/install.sh /path/to/your/project
-```
+如果你之前使用 Bash 安装脚本，请迁移到上面的 `npx workflow-ledger init` 流程。
 
 手动项目级安装 Claude Code：
 
