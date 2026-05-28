@@ -103,7 +103,14 @@ Claude should read `.claude/WORKFLOW.md`, verify repo state, and continue from `
 /workflow-ledger close
 ```
 
-Claude should move the task from `Active` to `Completed` and record a short `Close summary` with outcome, validation, and gaps.
+Claude should move the task from `Active` to `Completed` and record two layers:
+
+1. `Close summary` for quick scanning: outcome, validation, and gaps.
+2. `Archived execution` for later traceability: original intent, final Plan statuses, key changes, validation, and deferred or gap items.
+
+`Close summary` is not a replacement for process history. For Level 2/3 tasks, Claude should remove Active-only recovery fields such as `Current todo` and `Resume next`, but preserve a compact archive of what happened.
+
+When adopting this workflow in a project that already has Active Level 2/3 tasks, Claude should add or refresh `History so far` on the next workflow-ledger interaction. This keeps current resume fields untouched while preserving completed milestones, key decisions, validation already performed, and known gaps. On close, `History so far` becomes `Archived execution`.
 
 ## Merge suggestions
 

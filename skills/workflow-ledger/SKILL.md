@@ -70,6 +70,8 @@ Active entries should stay small and resumable:
 
 If blocked, set `Status: Blocked`, add `Blocked by:`, and make `Resume next` the single unblock action.
 
+For existing Active Level 2/3 tasks that predate the history-preserving close workflow, add or refresh a compact `History so far:` section on the first workflow-ledger interaction after adoption. Keep `Current phase`, `Current todo`, and `Resume next` untouched while the task remains Active. `History so far` should preserve the original intent if clear, current Plan statuses, completed milestones, key Changes or decisions, validation already performed, and known deferred or gap items.
+
 ## Plan long-running work
 
 Use `/workflow-ledger plan` when the user wants to turn an existing design document, pasted design text, issue description, or implementation outline into a durable Workflow Ledger task plan before coding starts.
@@ -167,6 +169,33 @@ Do not move non-blocking discoveries into `Current todo:` just because they were
 5. Add one `Changes:` bullet only when the change explains why the next action or scope differs.
 6. Keep raw command output, transcripts, and implementation details out of the ledger.
 
+## Preserve history for existing Active tasks
+
+When a project already has Active Level 2/3 tasks and this workflow is adopted, proactively preserve their process history before they close.
+
+1. On the first workflow-ledger interaction after adoption, inspect every Active Level 2/3 task.
+2. If one lacks `History so far:`, add it before or alongside the requested update.
+3. If one already has `History so far:`, refresh it only when the requested update changes Plan status, material Changes, validation, deferred work, or gaps.
+4. If the requested interaction is `close` and `History so far:` is missing, create `Archived execution:` directly from the current Active task body; do not block the close just to add an intermediate section.
+5. If multiple Active Level 2/3 tasks exist, apply the check to each one without reordering, merging, or otherwise disrupting task priority.
+
+Use this compact shape:
+
+```markdown
+History so far:
+- Intent: Original goal or current best summary.
+- Completed milestones:
+  - [done] P1 — Completed milestone.
+- Key changes:
+  - Important scope or decision changes so far.
+- Validation:
+  - Checks already performed.
+- Deferred / gaps:
+  - Known follow-up or None.
+```
+
+Level 1 tasks do not need `History so far:` unless the user asks for traceability or the task already has meaningful phase history.
+
 ## Task merge suggestions
 
 Suggest merging only when related items share a task family, can be completed in one iteration, can be validated together, and still form a clear user-visible todo.
@@ -209,10 +238,15 @@ Keep the summary compact. Prefer short unordered bullets for `本轮任务` and 
 
 1. Ensure required work is done or explicitly deferred to `Backlog / Future`.
 2. Move the task from `Active` to `Completed`.
-3. Replace active-only fields with `Close summary:`.
-4. Include only outcome, validation, and gaps.
+3. Treat close as an archival transition, not a summary replacement.
+4. Add `Close summary:` with outcome, validation, and gaps for quick scanning.
+5. For Level 2/3 tasks, add `Archived execution:` after `Close summary:` so the task remains auditable.
+6. Build `Archived execution:` from `History so far:` if present, reconciled with the final Plan state. If `History so far:` is missing, derive it directly from the Active task body.
+7. Remove active-only recovery fields from the Completed entry: `Current phase`, `Current todo`, `Resume next`, and `Blocked by`, unless a blocker became a final gap.
+8. Preserve Plan terminal statuses and short reasons for `blocked`, `deferred`, `removed`, and `merged` items.
+9. Keep archive sections compact: 1-3 bullets per subsection unless the original Plan has more items.
 
-Use this completed shape:
+Use this completed shape for Level 2/3 tasks:
 
 ```markdown
 ### WF-YYYY-MM-DD-001 — Task title
@@ -223,7 +257,21 @@ Close summary:
 - Outcome: What changed.
 - Validation: What passed.
 - Gaps: None or deferred follow-up.
+
+Archived execution:
+- Intent: Original goal or user-visible change intent.
+- Plan:
+  - [done] P1 — Completed milestone.
+  - [deferred] P2 — Deferred milestone. Deferred: reason.
+- Key changes:
+  - Scope, todo, prerequisite, or blocker changes that mattered.
+- Validation:
+  - Checks, tests, reviews, or manual verification performed.
+- Deferred / gaps:
+  - Follow-up work, known omissions, or None.
 ```
+
+Level 1 tasks may use only `Close summary:` unless they have meaningful process history or the user asks for traceability.
 
 ## Interaction with other mechanisms
 

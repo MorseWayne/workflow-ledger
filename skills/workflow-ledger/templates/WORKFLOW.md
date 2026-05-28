@@ -46,9 +46,21 @@ Resume next:
 
 ### WF-YYYY-MM-DD-000 — Completed task title
 Completed: YYYY-MM-DD
-Level: 1
+Level: 2
 
 Close summary:
 - Outcome: User-visible result.
 - Validation: Checks performed.
 - Gaps: Remaining follow-up or none.
+
+Archived execution:
+- Intent: Original goal or user-visible change intent.
+- Plan:
+  - [done] P1 — Completed milestone.
+  - [deferred] P2 — Deferred milestone. Deferred: reason.
+- Key changes:
+  - Scope, todo, prerequisite, or blocker changes that mattered.
+- Validation:
+  - Checks, tests, reviews, or manual verification performed.
+- Deferred / gaps:
+  - Follow-up work, known omissions, or None.

@@ -99,9 +99,12 @@ Claude 应该：
 
 1. 确认必要工作已完成，或明确延期。
 2. 把任务从 `Active` 移到 `Completed`。
-3. 用 `Close summary:` 替换 active-only 字段。
-4. 只记录 outcome、validation 和 gaps。
-5. 把未来工作保留在 `Backlog / Future`。
+3. 写 `Close summary:`，用于快速浏览 outcome、validation 和 gaps。
+4. 对 Level 2/3 任务继续写 `Archived execution:`，用于回溯原始意图、最终 Plan 状态、关键变更、验证和延期/缺口。
+5. 移除 `Current todo`、`Resume next` 等 active-only 恢复字段，但不要用 `Close summary` 替代过程记录。
+6. 把未来工作保留在 `Backlog / Future`。
+
+如果在已经有 Active Level 2/3 任务的项目中启用这套新规则，Claude 应在下一次 workflow-ledger 交互时主动补充或刷新 `History so far:`。这个字段保留已完成里程碑、关键决策、已做验证和已知缺口，同时不改变 `Current phase`、`Current todo`、`Resume next` 等恢复字段。最终关闭任务时，`History so far:` 转为 `Archived execution:`。
 
 ## 合并建议
 
