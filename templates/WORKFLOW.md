@@ -23,7 +23,7 @@ Intent:
 - One user-visible goal or change intent.
 
 Plan:
-- [todo] P1 — First planned milestone.
+- [doing] P1 — First planned milestone.
 - [todo] P2 — Second planned milestone.
 
 Current todo:

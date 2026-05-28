@@ -94,6 +94,32 @@ Plan:
 - [deferred] P4 — Add dashboard polish. Deferred: outside the first implementation slice.
 ```
 
+## Iteration checkpoint
+
+Run an iteration checkpoint after completing any Plan item or `Current todo` item. This is mandatory for tracked Level 2/3 work.
+
+1. Update `.claude/WORKFLOW.md` before reporting the item as complete.
+2. Change the completed Plan item from `doing` to `done`; if it is blocked or deferred, use `blocked` or `deferred` with a short reason.
+3. Select the next actionable Plan item and change it from `todo` to `doing`. If no actionable Plan item remains, prepare to close the task or ask what should happen next.
+4. Update `Current todo:` so it references only the active `doing` Plan item.
+5. Update `Current phase` and `Resume next` to match the active Plan item or close/unblock action.
+6. Add one resume-relevant `Changes:` bullet when the checkpoint changes scope, sequence, blocker state, or validation status.
+7. Run relevant validation for the completed item and note gaps or deferred work.
+8. If files changed, commit the code, tests, docs, and ledger update together unless the user explicitly said not to commit.
+9. Present a concise step summary with outcome, validation, gaps, commit status, and next Plan item.
+10. Ask whether to continue to the next Plan item instead of automatically running through the rest of the Plan.
+
+Checkpoint summary shape:
+
+```markdown
+本步完成：
+验证：
+Gaps：
+提交：
+下一步：
+要继续吗？
+```
+
 ## Handling changing todos
 
 When implementation reveals new work, first check whether related items belong to the same task family and can be completed and validated in the same iteration. If so, follow `Task merge suggestions` before writing separate ledger or TodoWrite items.

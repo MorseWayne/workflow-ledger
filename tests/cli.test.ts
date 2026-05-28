@@ -100,6 +100,19 @@ test('doctor and list handle ledger fixtures', () => {
     const nextJson = JSON.parse(result.stdout);
     assert.equal(nextJson.next.planItem.id, 'P2');
 
+    root = path.join(tmp, 'stale-checkpoint');
+    copyFixture('stale-checkpoint', root);
+    result = runCli(['doctor'], root);
+    assertOk(result, 'doctor returns 0 for stale checkpoint warnings');
+    assert.match(result.stdout, /has todo Plan items but no doing item/);
+    assert.match(result.stdout, /Current todo references Plan item P1 with status 'done' instead of 'doing'/);
+
+    result = runCli(['doctor', '--json'], root);
+    assertOk(result, 'doctor --json includes checkpoint warnings');
+    const staleDoctorJson = JSON.parse(result.stdout);
+    assert.equal(staleDoctorJson.ok, true);
+    assert.ok(staleDoctorJson.diagnostics.some((diagnostic: { message: string }) => diagnostic.message.includes('no doing item')));
+
     root = path.join(tmp, 'missing-intent');
     copyFixture('missing-intent', root);
     result = runCli(['doctor'], root);

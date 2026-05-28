@@ -23,7 +23,7 @@ Intent:
 - 一个用户可见的目标或变更意图。
 
 Plan:
-- [todo] P1 — 第一个计划里程碑。
+- [doing] P1 — 第一个计划里程碑。
 - [todo] P2 — 第二个计划里程碑。
 
 Current todo:

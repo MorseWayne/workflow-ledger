@@ -15,7 +15,6 @@ Plan:
 - [doing] P2 — Continue with docs.
 
 Current todo:
-- [x] P1 — Implement CLI.
 - [ ] P2 — Continue with docs.
 
 Changes:

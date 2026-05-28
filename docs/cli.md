@@ -71,7 +71,7 @@ Warnings do not fail the command:
 - More than one Active task.
 - Level 2/3 task without `Plan`, `Changes`, or `Prerequisites`.
 - Plan with no structured items.
-- Plan with multiple `doing` items, duplicate ids, unknown statuses, missing reasons for blocked/deferred/removed/merged items, or `Current todo` that does not reference a Plan id.
+- Plan with multiple `doing` items, no `doing` item while `todo` items remain, all items terminal while the task is still Active, duplicate ids, unknown statuses, missing reasons for blocked/deferred/removed/merged items, or `Current todo` that does not reference the active `doing` Plan id.
 - Ledger older than the latest git commit.
 - Active task with more than 100 lines.
 - Completed task still under `Active` without `Close summary`.

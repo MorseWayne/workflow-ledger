@@ -643,18 +643,26 @@ function collectDoctorDiagnostics(parsed: ParsedLedger, ledger: string): { diagn
     if (task.hasPlan) {
       if (task.planItems.length === 0) say('warning', `Task '${task.title}' has Plan but no structured plan items.`);
       const doingItems = task.planItems.filter((item) => item.status === 'doing');
+      const todoItems = task.planItems.filter((item) => item.status === 'todo');
+      const terminalItems = task.planItems.filter((item) => ['done', 'deferred', 'removed', 'merged'].includes(item.status));
       if (doingItems.length > 1) say('warning', `Task '${task.title}' has more than one doing Plan item.`);
+      if (task.status === 'In Progress' && doingItems.length === 0 && todoItems.length > 0) say('warning', `Task '${task.title}' has todo Plan items but no doing item.`);
+      if (task.status === 'In Progress' && task.planItems.length > 0 && terminalItems.length === task.planItems.length) say('warning', `Task '${task.title}' has no remaining Plan items but is still Active.`);
+      const itemsById = new Map<string, PlanItem>();
       const ids = new Set<string>();
       for (const item of task.planItems) {
         if (ids.has(item.id)) say('warning', `Task '${task.title}' repeats Plan item id ${item.id}.`);
         ids.add(item.id);
+        itemsById.set(item.id, item);
         if (!knownPlanStatuses.has(item.status as PlanStatus)) say('warning', `Task '${task.title}' has unknown Plan status '${item.status}' on ${item.id}.`);
         if (planItemNeedsReason(item) && !planItemHasReason(item)) say('warning', `Task '${task.title}' Plan item ${item.id} is ${item.status} but lacks a reason.`);
       }
       const currentRefs = task.currentTodoItems.flatMap(extractPlanRefs);
       if (task.currentTodoItems.length > 0 && currentRefs.length === 0) say('warning', `Task '${task.title}' Current todo does not reference a Plan item id.`);
       for (const ref of currentRefs) {
-        if (!ids.has(ref)) say('warning', `Task '${task.title}' Current todo references missing Plan item ${ref}.`);
+        const item = itemsById.get(ref);
+        if (!item) say('warning', `Task '${task.title}' Current todo references missing Plan item ${ref}.`);
+        else if (item.status !== 'doing') say('warning', `Task '${task.title}' Current todo references Plan item ${ref} with status '${item.status}' instead of 'doing'.`);
       }
     }
   }

@@ -203,6 +203,7 @@ Resume next:
 - Preserve todo history in `Plan` by changing item statuses instead of deleting old items.
 - Keep the active intent small and current.
 - Treat `Current todo` as the mutable execution focus, not the full historical plan.
+- After each Plan item, update the ledger, summarize the step, commit changed files, and ask whether to continue.
 - Record why prerequisites or future tasks were added.
 - Avoid process for process's sake.
 - Prefer one durable ledger over many scattered notes.
