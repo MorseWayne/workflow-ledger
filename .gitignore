@@ -7,3 +7,5 @@ Generated local artifacts and editor files.
 node_modules/
 bin/*.js
 bin/*.js.map
+.claude/skills/
+.claude/settings.json
