@@ -2,7 +2,7 @@
 name: workflow-ledger
 description: Lightweight OpenSpec-style change ledger for Claude Code. Active only in projects initialized with workflow-ledger init, or when the user explicitly asks to initialize/setup/install Workflow Ledger.
 when_to_use: Use for development tasks that need mutable todo tracking, prerequisites, blockers, deferred follow-ups, or cross-session recovery only when `.claude/WORKFLOW.md` already exists. If the project is not initialized, do not manage work with this skill; only explain how to run `npx workflow-ledger init`. Skip for pure Q&A and trivial one-step edits unless the user requests tracking. Trigger phrases include "start task", "resume task", "update", "close", "workflow", "ledger", "recover", "continue previous task", "what is left", "review progress", "init workflow-ledger", "setup workflow-ledger".
-argument-hint: start|resume|update|close [task]
+argument-hint: start|plan|resume|update|close [task or design text]
 ---
 
 # Workflow Ledger
@@ -61,13 +61,38 @@ Active entries should stay small and resumable:
 - stable ID: `WF-YYYY-MM-DD-NNN`
 - status, level, started/updated dates, and `Current phase`
 - `Intent:` as the smallest user-visible goal
-- mutable `Current todo:`
+- `Plan:` for Level 2/3 long-running work; use stable item ids such as `P1`, `P2`
+- mutable `Current todo:` that references the active Plan item when a Plan exists
 - resume-relevant `Changes:` only; use `- None` if there are no resume-relevant changes
 - `Prerequisites:` or `None`
 - optional `Blocked by:` when blocked
 - one concrete `Resume next:` action
 
 If blocked, set `Status: Blocked`, add `Blocked by:`, and make `Resume next` the single unblock action.
+
+## Plan long-running work
+
+Use `/workflow-ledger plan` when the user wants to turn an existing design document, pasted design text, issue description, or implementation outline into a durable Workflow Ledger task plan before coding starts.
+
+1. Locate `.claude/WORKFLOW.md`. If it is missing, stop and ask the user to run `npx workflow-ledger init`; do not create it implicitly.
+2. Read the design text from the command arguments, the user's selected text, an explicitly provided file path, or the user's pasted content. If no source is available, ask for the design text.
+3. Extract a compact long-term `Plan:` with stable ids: `P1`, `P2`, `P3`, etc. Prefer phase-sized tasks that are independently reviewable and testable.
+4. Use Plan statuses exactly as needed: `todo`, `doing`, `done`, `blocked`, `deferred`, `removed`, `merged`.
+5. Preserve history by changing Plan item statuses instead of deleting old items. For `blocked`, `deferred`, `removed`, and `merged`, include a short reason in the same line.
+6. Create a new Active task or update the current matching Active task. Keep `Intent:` user-visible and small.
+7. Set `Current todo:` to the first actionable Plan item and include that Plan id, for example `- [ ] P1 — Review existing API boundaries`.
+8. Set `Current phase` and `Resume next` from the same first actionable Plan item.
+9. Record prerequisites found in the design text under `Prerequisites:`; non-blocking discoveries go to `Backlog / Future`.
+
+Use this Plan item shape:
+
+```markdown
+Plan:
+- [todo] P1 — Review existing API boundaries.
+- [todo] P2 — Implement parser changes.
+- [blocked] P3 — Validate migration. Blocked: staging dataset is not available yet.
+- [deferred] P4 — Add dashboard polish. Deferred: outside the first implementation slice.
+```
 
 ## Handling changing todos
 
@@ -94,25 +119,27 @@ Do not move non-blocking discoveries into `Current todo:` just because they were
 3. Create one `Active` task entry unless the user approved merging into an existing task.
 4. Classify Level 0-3.
 5. Write the smallest `Intent:`.
-6. Set mutable `Current todo:`.
-7. Record `Prerequisites:` or `None`.
-8. Set `Current phase` as the current focus and write one concrete `Resume next` action.
+6. For Level 2/3 work, create an upfront `Plan:` before coding. If the user provided design text, use `Plan long-running work` to convert it into stable Plan items.
+7. Set mutable `Current todo:` to the first actionable item; reference the Plan id when a Plan exists.
+8. Record `Prerequisites:` or `None`.
+9. Set `Current phase` as the current focus and write one concrete `Resume next` action.
 
 ## Resume a task
 
 1. Read `.claude/WORKFLOW.md`.
 2. Find the single highest-priority `Active` task.
-3. Use `Intent`, `Current phase`, `Current todo`, `Prerequisites`, `Blocked by`, and `Resume next` to continue.
+3. Use `Intent`, `Plan`, `Current phase`, `Current todo`, `Prerequisites`, `Blocked by`, and `Resume next` to continue.
 4. Verify current repo state before trusting stale ledger details.
 5. If code state differs from the ledger, update the ledger with the observed resume-relevant state.
 
 ## Update a task
 
 1. Update only resume-relevant fields.
-2. When rewriting `Current todo:`, first check whether sibling items can be suggested as one merged task-family item.
-3. Prefer changing `Current todo:` over appending a history log.
-4. Add one `Changes:` bullet only when the change explains why the next action or scope differs.
-5. Keep raw command output, transcripts, and implementation details out of the ledger.
+2. Preserve Plan history by changing item statuses rather than deleting old items.
+3. When rewriting `Current todo:`, first check whether sibling items can be suggested as one merged task-family item.
+4. Prefer changing `Current todo:` over appending a history log.
+5. Add one `Changes:` bullet only when the change explains why the next action or scope differs.
+6. Keep raw command output, transcripts, and implementation details out of the ledger.
 
 ## Task merge suggestions
 

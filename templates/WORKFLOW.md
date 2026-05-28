@@ -22,8 +22,12 @@ Current phase: Current focus name
 Intent:
 - One user-visible goal or change intent.
 
+Plan:
+- [todo] P1 — First planned milestone.
+- [todo] P2 — Second planned milestone.
+
 Current todo:
-- [ ] Mutable next item.
+- [ ] P1 — Mutable next item.
 
 Changes:
 - Scope, todo, prerequisite, or blocker changes that matter for resume.

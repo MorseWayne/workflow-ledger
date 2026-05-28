@@ -38,6 +38,8 @@ That is valuable for large feature work, but too heavy for everyday Claude Code 
 - **One change ledger**: `.claude/WORKFLOW.md` is the source of truth.
 - **Task levels**: Level 0-3 classification keeps simple work light and complex work safer.
 - **Intent-first entries**: each active task records one small user-visible intent.
+- **Structured Plan**: Level 2/3 tasks can keep stable plan items and preserve todo history.
+- **Design-to-ledger planning**: `/workflow-ledger plan` helps coding agents convert design text into a durable Plan before implementation.
 - **Mutable todo**: `Current todo` can change as requirements, prerequisites, or blockers appear.
 - **Recoverability**: every active task has `Current phase` as current focus and `Resume next`.
 - **Dependency discipline**: blocking prerequisites stay in the active entry; non-blocking discoveries go to Backlog/Future.
@@ -127,8 +129,9 @@ cp -R skills/workflow-ledger ~/.claude/skills/workflow-ledger
 The CLI can check and summarize the ledger:
 
 ```bash
-npx workflow-ledger doctor
-npx workflow-ledger list
+npx workflow-ledger doctor [--json]
+npx workflow-ledger list [--json]
+npx workflow-ledger next [--json]
 ```
 
 See [docs/cli.md](docs/cli.md) for command details. The CLI is an optional guardrail; it does not replace the skill workflow.
@@ -137,6 +140,7 @@ Then invoke it in Claude Code:
 
 ```text
 /workflow-ledger start "implement auth flow"
+/workflow-ledger plan "paste or reference a design document to create a structured Plan"
 /workflow-ledger resume
 /workflow-ledger close
 ```
@@ -165,9 +169,13 @@ Current phase: Implement conversion fix
 Intent:
 - Stabilize streaming usage accounting without expanding the ledger into a transcript.
 
+Plan:
+- [done] P1 — Update converter.
+- [doing] P2 — Add regression test.
+- [deferred] P3 — Add dashboard polish. Deferred: outside this fix.
+
 Current todo:
-- [ ] Update converter.
-- [ ] Add regression test.
+- [ ] P2 — Add regression test.
 
 Changes:
 - 2026-05-16 — Current implementation path narrowed to the provider conversion code.
@@ -191,8 +199,10 @@ Resume next:
 ## Design principles
 
 - Keep the overview file useful at a glance.
+- Plan Level 2/3 work up front when a design document or long-running task exists.
+- Preserve todo history in `Plan` by changing item statuses instead of deleting old items.
 - Keep the active intent small and current.
-- Treat `Current todo` as mutable when implementation reveals new work.
+- Treat `Current todo` as the mutable execution focus, not the full historical plan.
 - Record why prerequisites or future tasks were added.
 - Avoid process for process's sake.
 - Prefer one durable ledger over many scattered notes.
@@ -216,4 +226,4 @@ Skip it for:
 
 ## Repository status
 
-This version uses the Node.js CLI as the single implementation for setup, init, doctor, list, and hooks. The Bash installer remains as a small bootstrap wrapper for Claude Code project initialization.
+This version uses the Node.js CLI as the single implementation for setup, init, doctor, list, next, and hooks. The Bash installer remains as a small bootstrap wrapper for Claude Code project initialization.

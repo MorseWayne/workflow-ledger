@@ -10,9 +10,13 @@ Current phase: Build CLI guardrails
 Intent:
 - Provide lightweight CLI guardrails for the workflow ledger.
 
+Plan:
+- [done] P1 — Implement CLI.
+- [doing] P2 — Continue with docs.
+
 Current todo:
-- [x] Implement CLI.
-- [ ] Continue with docs.
+- [x] P1 — Implement CLI.
+- [ ] P2 — Continue with docs.
 
 Changes:
 - 2026-05-16 — Keep the fixture short and focused on resume readiness.

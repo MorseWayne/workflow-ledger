@@ -65,6 +65,41 @@ test('doctor and list handle ledger fixtures', () => {
     assert.match(result.stdout, /Current phase: Build CLI guardrails/);
     assert.match(result.stdout, /Resume next: Continue with docs\./);
 
+    root = path.join(tmp, 'plan');
+    copyFixture('plan', root);
+    result = runCli(['doctor'], root);
+    assertOk(result, 'doctor returns 0 for Plan-aware ledger');
+    assert.match(result.stdout, /doctor finished with 0 errors/);
+
+    result = runCli(['list'], root);
+    assertOk(result, 'list prints Plan progress and next Plan item');
+    assert.match(result.stdout, /Plan-aware task/);
+    assert.match(result.stdout, /Plan: /);
+    assert.match(result.stdout, /Next plan item: P2 \[doing\] Implement parser support/);
+
+    result = runCli(['next'], root);
+    assertOk(result, 'next prints first actionable Plan item');
+    assert.match(result.stdout, /Task: WF-2026-05-28-001 — Plan-aware task/);
+    assert.match(result.stdout, /Next plan item: P2 \[doing\] Implement parser support/);
+    assert.match(result.stdout, /Resume next: Finish P2 parser support/);
+
+    result = runCli(['list', '--json'], root);
+    assertOk(result, 'list --json emits Plan metadata');
+    const listJson = JSON.parse(result.stdout);
+    assert.equal(listJson.active[0].plan.next.id, 'P2');
+    assert.equal(listJson.active[0].plan.summary.doing, 1);
+
+    result = runCli(['doctor', '--json'], root);
+    assertOk(result, 'doctor --json emits diagnostics summary');
+    const doctorJson = JSON.parse(result.stdout);
+    assert.equal(doctorJson.ok, true);
+    assert.equal(doctorJson.summary.activeTasks, 1);
+
+    result = runCli(['next', '--json'], root);
+    assertOk(result, 'next --json emits next Plan item');
+    const nextJson = JSON.parse(result.stdout);
+    assert.equal(nextJson.next.planItem.id, 'P2');
+
     root = path.join(tmp, 'missing-intent');
     copyFixture('missing-intent', root);
     result = runCli(['doctor'], root);

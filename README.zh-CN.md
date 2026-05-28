@@ -36,6 +36,8 @@
 - **单文件 change ledger**：`.claude/WORKFLOW.md` 是任务状态源。
 - **任务分级**：Level 0-3，让简单任务保持轻量，复杂任务更安全。
 - **Intent-first 条目**：每个 Active 任务只记录一个小的用户可见目标。
+- **结构化 Plan**：Level 2/3 任务可以保留稳定计划项和 todo 历史。
+- **设计转 ledger 规划**：`/workflow-ledger plan` 帮 coding agent 在实现前把设计文本转换成持久 Plan。
 - **可变 todo**：`Current todo` 可以随新增需求、前置依赖或阻塞调整。
 - **可恢复点**：每个活跃任务都有表示当前焦点的 `Current phase` 和 `Resume next`。
 - **依赖管理**：阻塞当前目标的前置依赖留在 Active；非阻塞发现进入 Backlog/Future。
@@ -125,8 +127,9 @@ cp -R skills/workflow-ledger ~/.claude/skills/workflow-ledger
 CLI 可以检查和汇总 ledger：
 
 ```bash
-npx workflow-ledger doctor
-npx workflow-ledger list
+npx workflow-ledger doctor [--json]
+npx workflow-ledger list [--json]
+npx workflow-ledger next [--json]
 ```
 
 详见 [docs/cli.md](docs/cli.md)。CLI 是可选保护栏，不替代 skill 工作流。
@@ -135,6 +138,7 @@ npx workflow-ledger list
 
 ```text
 /workflow-ledger start "implement auth flow"
+/workflow-ledger plan "粘贴或引用设计文档，生成结构化 Plan"
 /workflow-ledger resume
 /workflow-ledger close
 ```
@@ -163,9 +167,13 @@ Current phase: Implement conversion fix
 Intent:
 - Stabilize streaming usage accounting without expanding the ledger into a transcript.
 
+Plan:
+- [done] P1 — Update converter.
+- [doing] P2 — Add regression test.
+- [deferred] P3 — Add dashboard polish. Deferred: outside this fix.
+
 Current todo:
-- [ ] Update converter.
-- [ ] Add regression test.
+- [ ] P2 — Add regression test.
 
 Changes:
 - 2026-05-16 — Current implementation path narrowed to the provider conversion code.
@@ -189,8 +197,10 @@ Resume next:
 ## 设计原则
 
 - 总览文件必须一眼有用。
+- 有设计文档或长期任务时，Level 2/3 工作应先规划。
+- 通过修改 `Plan` 条目状态保留 todo 历史，而不是删除旧条目。
 - 保持 Active intent 小而明确。
-- 执行中发现新情况时允许调整 `Current todo`。
+- 将 `Current todo` 作为当前执行焦点，而不是完整历史计划。
 - 新增前置依赖或未来任务时记录原因。
 - 不为了流程而流程。
 - 优先一个持久 ledger，而不是散落的过程文件。
@@ -214,4 +224,4 @@ Resume next:
 
 ## 当前状态
 
-当前版本以 Node.js CLI 作为 setup、init、doctor、list 和 hooks 的唯一实现。Bash 安装器保留为 Claude Code 项目初始化的轻量 bootstrap wrapper。
+当前版本以 Node.js CLI 作为 setup、init、doctor、list、next 和 hooks 的唯一实现。Bash 安装器保留为 Claude Code 项目初始化的轻量 bootstrap wrapper。

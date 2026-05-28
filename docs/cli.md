@@ -22,8 +22,9 @@ workflow-ledger init --lang zh-CN
 workflow-ledger init --tool claude-code --lang en
 workflow-ledger init --tool codex --lang en
 workflow-ledger init --tool all --lang en
-workflow-ledger doctor
-workflow-ledger list
+workflow-ledger doctor [--json]
+workflow-ledger list [--json]
+workflow-ledger next [--json]
 workflow-ledger hooks status
 workflow-ledger hooks install
 ```
@@ -68,17 +69,27 @@ Errors return exit code `1`:
 Warnings do not fail the command:
 
 - More than one Active task.
-- Level 2/3 task without `Changes` or `Prerequisites`.
+- Level 2/3 task without `Plan`, `Changes`, or `Prerequisites`.
+- Plan with no structured items.
+- Plan with multiple `doing` items, duplicate ids, unknown statuses, missing reasons for blocked/deferred/removed/merged items, or `Current todo` that does not reference a Plan id.
 - Ledger older than the latest git commit.
-- Active task with more than 80 lines.
+- Active task with more than 100 lines.
 - Completed task still under `Active` without `Close summary`.
 - Backlog with more than 10 items.
 
 ## `list`
 
-Prints a compact summary of active tasks, current focus, resume next action, backlog count, and completed count.
+Prints a compact summary of active tasks, current focus, Plan progress, next Plan item, resume next action, backlog count, and completed count.
+
+Use `--json` to emit machine-readable task summaries for hooks or other tooling.
 
 If `.claude/WORKFLOW.md` is missing, `list` prints a message and exits `0`.
+
+## `next`
+
+Prints the first Active task's next actionable Plan item and `Resume next` action. Use `--json` for machine-readable output.
+
+Design text is converted into Plan items by the coding-agent skill flow, not by the CLI. In Claude Code, use `/workflow-ledger plan` with pasted design text or a design document reference.
 
 ## Hooks
 

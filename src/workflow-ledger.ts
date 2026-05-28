@@ -44,8 +44,9 @@ Usage:
   workflow-ledger setup [--tool claude-code|codex|all]
   workflow-ledger init [--tool claude-code|codex|all] [--lang en|zh-CN] [--root PATH]
   workflow-ledger help
-  workflow-ledger doctor
-  workflow-ledger list
+  workflow-ledger doctor [--json]
+  workflow-ledger list [--json]
+  workflow-ledger next [--json]
   workflow-ledger hooks status
   workflow-ledger hooks install
 
@@ -58,10 +59,18 @@ interface CliArgs {
   language: string;
   root: string;
   interactiveLanguage: boolean;
+  json: boolean;
 }
 
 function parseArgs(argv: string[]): CliArgs {
-  const args = { command: argv[0] || 'help', tool: 'claude-code', language: '', root: targetRoot, interactiveLanguage: argv[0] === 'init' };
+  const args = {
+    command: argv[0] || 'help',
+    tool: 'claude-code',
+    language: '',
+    root: targetRoot,
+    interactiveLanguage: argv[0] === 'init',
+    json: false,
+  };
   for (let i = 1; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === '--tool') {
@@ -86,6 +95,8 @@ function parseArgs(argv: string[]): CliArgs {
       i += 1;
     } else if (arg.startsWith('--root=')) {
       args.root = path.resolve(arg.slice('--root='.length));
+    } else if (arg === '--json') {
+      args.json = true;
     }
   }
   args.tool = toolAliases.get(args.tool) || args.tool;
@@ -355,14 +366,22 @@ function hookStatusValue(root = targetRoot): string {
   return 'incomplete';
 }
 
-function hasSection(lines: string[], name: string): boolean {
-  return lines.some((line) => new RegExp(`^##\\s+${name}\\s*$`).test(line));
-}
-
 function formatLocalTimestamp(epochSeconds: number): string {
   const date = new Date(epochSeconds * 1000);
   const pad = (value: number): string => String(value).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
+type PlanStatus = 'todo' | 'doing' | 'done' | 'blocked' | 'deferred' | 'removed' | 'merged';
+
+type LedgerSection = 'none' | 'active' | 'backlog' | 'completed';
+
+interface PlanItem {
+  id: string;
+  status: string;
+  title: string;
+  raw: string;
+  line: number;
 }
 
 interface LedgerTask {
@@ -371,6 +390,7 @@ interface LedgerTask {
   level: string;
   currentPhase: string;
   hasIntent: boolean;
+  hasPlan: boolean;
   hasTodo: boolean;
   hasChanges: boolean;
   hasPrerequisites: boolean;
@@ -378,164 +398,278 @@ interface LedgerTask {
   hasBlockedBy: boolean;
   hasCloseSummary: boolean;
   lineCount: number;
+  planItems: PlanItem[];
+  currentTodoItems: string[];
+  resumeNext: string;
 }
 
-function cmdDoctor(): void {
-  const ledger = ledgerPath();
-  let errorCount = 0;
-  let warningCount = 0;
-  const out: string[] = [];
+interface ParsedLedger {
+  lines: string[];
+  hasActive: boolean;
+  hasBacklog: boolean;
+  hasCompleted: boolean;
+  activeTasks: LedgerTask[];
+  backlogItems: number;
+  completedItems: number;
+}
 
-  const sayError = (message: string): void => {
-    errorCount += 1;
-    out.push(`ERROR: ${message}`);
+interface DoctorDiagnostic {
+  severity: 'error' | 'warning' | 'info';
+  message: string;
+}
+
+const knownPlanStatuses = new Set<PlanStatus>(['todo', 'doing', 'done', 'blocked', 'deferred', 'removed', 'merged']);
+
+function isTaskBlockHeading(line: string): boolean {
+  return /^(Intent|Plan|Current\s+todo|Changes|Prerequisites|Blocked\s+by|Resume\s+next|Close\s+summary|Acceptance\s*\/\s*Review):\s*$/.test(line);
+}
+
+function normalizePlanStatus(status: string): string {
+  return status.trim().toLowerCase();
+}
+
+function parsePlanItem(line: string, lineNumber: number): PlanItem | null {
+  const match = line.match(/^-\s+\[([^\]]+)\]\s+([A-Za-z][A-Za-z0-9._-]*)\s+(?:—|-)\s+(.+)$/);
+  if (!match) return null;
+  return {
+    status: normalizePlanStatus(match[1]),
+    id: match[2],
+    title: match[3].trim(),
+    raw: line.trim(),
+    line: lineNumber,
   };
-  const sayWarning = (message: string): void => {
-    warningCount += 1;
-    out.push(`WARNING: ${message}`);
+}
+
+function planItemNeedsReason(item: PlanItem): boolean {
+  return ['blocked', 'deferred', 'removed', 'merged'].includes(item.status);
+}
+
+function planItemHasReason(item: PlanItem): boolean {
+  return /\b(blocked|deferred|removed|merged|reason|because|into):/i.test(item.raw)
+    || /(原因|因为|阻塞|延后|延期|移除|合并|并入|转入)/.test(item.raw);
+}
+
+function planSummary(planItems: PlanItem[]): Record<string, number> {
+  const summary: Record<string, number> = {};
+  for (const item of planItems) summary[item.status] = (summary[item.status] || 0) + 1;
+  return summary;
+}
+
+function nextPlanItem(task: LedgerTask): PlanItem | null {
+  return task.planItems.find((item) => item.status === 'doing')
+    || task.planItems.find((item) => item.status === 'todo')
+    || task.planItems.find((item) => item.status === 'blocked')
+    || null;
+}
+
+function extractPlanRefs(text: string): string[] {
+  return Array.from(new Set(text.match(/\bP\d+[A-Za-z0-9._-]*\b/g) || []));
+}
+
+function createEmptyTask(title: string): LedgerTask {
+  return {
+    title,
+    status: '',
+    level: '',
+    currentPhase: '',
+    hasIntent: false,
+    hasPlan: false,
+    hasTodo: false,
+    hasChanges: false,
+    hasPrerequisites: false,
+    hasResume: false,
+    hasBlockedBy: false,
+    hasCloseSummary: false,
+    lineCount: 1,
+    planItems: [],
+    currentTodoItems: [],
+    resumeNext: '',
   };
-  const sayInfo = (message: string): void => {
-    out.push(`INFO: ${message}`);
-  };
+}
 
-  if (!fs.existsSync(ledger)) {
-    sayError('.claude/WORKFLOW.md is missing.');
-    console.log(out.join('\n'));
-    process.exitCode = 1;
-    return;
-  }
-
-  let text = '';
-  try {
-    text = fs.readFileSync(ledger, 'utf8');
-  } catch {
-    sayError('.claude/WORKFLOW.md exists but cannot be read.');
-    console.log(out.join('\n'));
-    process.exitCode = 1;
-    return;
-  }
-
+function parseLedgerText(text: string): ParsedLedger {
   const lines = text.split(/\r?\n/);
-  if (!hasSection(lines, 'Active')) sayError('Missing ## Active section.');
-  if (!hasSection(lines, 'Backlog / Future')) sayError('Missing ## Backlog / Future section.');
-  if (!hasSection(lines, 'Completed')) sayError('Missing ## Completed section.');
-
-  let activeCount = 0;
+  const activeTasks: LedgerTask[] = [];
+  let section: LedgerSection = 'none';
+  let currentBlock = '';
   let backlogItems = 0;
   let completedItems = 0;
-  let inActive = false;
-  let inBacklog = false;
-  let inCompleted = false;
   let task: LedgerTask | null = null;
+  let hasActive = false;
+  let hasBacklog = false;
+  let hasCompleted = false;
 
   const finishTask = (): void => {
     if (!task) return;
-    if (task.status === 'In Progress') {
-      if (!task.currentPhase) sayError(`In Progress task '${task.title}' lacks Current phase.`);
-      if (!task.hasIntent) sayError(`In Progress task '${task.title}' lacks Intent.`);
-      if (!task.hasTodo) sayError(`In Progress task '${task.title}' lacks Current todo.`);
-      if (!task.hasResume) sayError(`In Progress task '${task.title}' lacks Resume next.`);
-      if (task.level === '2' || task.level === '3') {
-        if (!task.hasChanges) sayWarning(`Level ${task.level} task '${task.title}' lacks Changes.`);
-        if (!task.hasPrerequisites) sayWarning(`Level ${task.level} task '${task.title}' lacks Prerequisites.`);
-      }
-    }
-    if (task.status === 'Blocked') {
-      if (!task.hasBlockedBy) sayError(`Blocked task '${task.title}' lacks Blocked by.`);
-      if (!task.hasResume) sayError(`Blocked task '${task.title}' lacks Resume next.`);
-    }
-    if (task.status === 'Done' || task.status === 'Completed') {
-      if (!task.hasCloseSummary) sayWarning(`Completed task '${task.title}' is still under Active and lacks Close summary. Move it to ## Completed when closing.`);
-    }
-    if (task.lineCount > 80) sayWarning(`Task '${task.title}' has more than 80 lines.`);
+    activeTasks.push(task);
+    task = null;
   };
 
-  for (const line of lines) {
+  lines.forEach((line, index) => {
+    const lineNumber = index + 1;
     if (line === '## Active') {
       finishTask();
-      inActive = true;
-      inBacklog = false;
-      inCompleted = false;
-      task = null;
-      continue;
+      section = 'active';
+      currentBlock = '';
+      hasActive = true;
+      return;
     }
     if (line === '## Backlog / Future') {
       finishTask();
-      inActive = false;
-      inBacklog = true;
-      inCompleted = false;
-      task = null;
-      continue;
+      section = 'backlog';
+      currentBlock = '';
+      hasBacklog = true;
+      return;
     }
     if (line === '## Completed') {
       finishTask();
-      inActive = false;
-      inBacklog = false;
-      inCompleted = true;
-      task = null;
-      continue;
+      section = 'completed';
+      currentBlock = '';
+      hasCompleted = true;
+      return;
     }
     if (line.startsWith('## ')) {
       finishTask();
-      inActive = false;
-      inBacklog = false;
-      inCompleted = false;
-      task = null;
+      section = 'none';
+      currentBlock = '';
+      return;
     }
 
-    if (inBacklog && /^-\s+(\[[ xX]\]\s+)?/.test(line)) backlogItems += 1;
-    if (inCompleted && /^###\s+/.test(line)) completedItems += 1;
+    if (section === 'backlog' && /^-\s+(\[[ xX]\]\s+)?/.test(line)) backlogItems += 1;
+    if (section === 'completed' && /^###\s+/.test(line)) completedItems += 1;
+    if (section !== 'active') return;
 
-    if (!inActive) continue;
     if (task) task.lineCount += 1;
     const titleMatch = line.match(/^###\s+(.+)/);
     if (titleMatch) {
       finishTask();
-      activeCount += 1;
-      task = {
-        title: titleMatch[1],
-        status: '',
-        level: '',
-        currentPhase: '',
-        hasIntent: false,
-        hasTodo: false,
-        hasChanges: false,
-        hasPrerequisites: false,
-        hasResume: false,
-        hasBlockedBy: false,
-        hasCloseSummary: false,
-        lineCount: 1,
-      };
-      continue;
+      task = createEmptyTask(titleMatch[1]);
+      currentBlock = '';
+      return;
     }
-    if (!task) continue;
+    if (!task) return;
+
     const statusMatch = line.match(/^Status:\s*(.+)/);
     if (statusMatch && !task.status) task.status = statusMatch[1];
     const levelMatch = line.match(/^Level:\s*([0-3])/);
     if (levelMatch) task.level = levelMatch[1];
     const currentMatch = line.match(/^Current\s+phase:\s*(.+)/);
     if (currentMatch) task.currentPhase = currentMatch[1];
-    if (/^Intent:/.test(line)) task.hasIntent = true;
-    if (/^Current\s+todo:/.test(line)) task.hasTodo = true;
-    if (/^Changes:/.test(line)) task.hasChanges = true;
-    if (/^Prerequisites:/.test(line)) task.hasPrerequisites = true;
-    if (/^Blocked\s+by:/.test(line)) task.hasBlockedBy = true;
-    if (/^Resume\s+next:/.test(line)) task.hasResume = true;
-    if (/^Close\s+summary:/.test(line)) task.hasCloseSummary = true;
-  }
+
+    if (/^Intent:/.test(line)) {
+      task.hasIntent = true;
+      currentBlock = 'Intent';
+    } else if (/^Plan:/.test(line)) {
+      task.hasPlan = true;
+      currentBlock = 'Plan';
+    } else if (/^Current\s+todo:/.test(line)) {
+      task.hasTodo = true;
+      currentBlock = 'Current todo';
+    } else if (/^Changes:/.test(line)) {
+      task.hasChanges = true;
+      currentBlock = 'Changes';
+    } else if (/^Prerequisites:/.test(line)) {
+      task.hasPrerequisites = true;
+      currentBlock = 'Prerequisites';
+    } else if (/^Blocked\s+by:/.test(line)) {
+      task.hasBlockedBy = true;
+      currentBlock = 'Blocked by';
+    } else if (/^Resume\s+next:/.test(line)) {
+      task.hasResume = true;
+      currentBlock = 'Resume next';
+    } else if (/^Close\s+summary:/.test(line)) {
+      task.hasCloseSummary = true;
+      currentBlock = 'Close summary';
+    } else if (isTaskBlockHeading(line)) {
+      currentBlock = '';
+    } else if (currentBlock === 'Plan') {
+      const item = parsePlanItem(line, lineNumber);
+      if (item) task.planItems.push(item);
+    } else if (currentBlock === 'Current todo' && /^-\s+/.test(line)) {
+      task.currentTodoItems.push(line.replace(/^-\s+\[[ xX]\]\s*/, '').replace(/^-\s+/, '').trim());
+    } else if (currentBlock === 'Resume next' && /^-\s+(.+)/.test(line) && !task.resumeNext) {
+      task.resumeNext = line.replace(/^-\s+/, '').trim();
+    } else if (line.trim() && currentBlock === 'Resume next') {
+      currentBlock = '';
+    }
+  });
   finishTask();
 
-  if (backlogItems > 10) sayWarning('Backlog / Future contains more than 10 items.');
-  if (activeCount > 1) sayWarning('More than one Active task; include priority, blocker state, and Resume next if this is intentional.');
+  return { lines, hasActive, hasBacklog, hasCompleted, activeTasks, backlogItems, completedItems };
+}
 
-  sayInfo(`Active tasks: ${activeCount}`);
-  sayInfo(`Backlog items: ${backlogItems}`);
-  sayInfo(`Completed tasks: ${completedItems}`);
+function readLedgerForCommand(): { ledger: string; text: string } | null {
+  const ledger = ledgerPath();
+  if (!fs.existsSync(ledger)) return null;
+  return { ledger, text: fs.readFileSync(ledger, 'utf8') };
+}
+
+function collectDoctorDiagnostics(parsed: ParsedLedger, ledger: string): { diagnostics: DoctorDiagnostic[]; errorCount: number; warningCount: number; ledgerMtime: number } {
+  const diagnostics: DoctorDiagnostic[] = [];
+  let errorCount = 0;
+  let warningCount = 0;
+
+  const say = (severity: DoctorDiagnostic['severity'], message: string): void => {
+    diagnostics.push({ severity, message });
+    if (severity === 'error') errorCount += 1;
+    if (severity === 'warning') warningCount += 1;
+  };
+
+  if (!parsed.hasActive) say('error', 'Missing ## Active section.');
+  if (!parsed.hasBacklog) say('error', 'Missing ## Backlog / Future section.');
+  if (!parsed.hasCompleted) say('error', 'Missing ## Completed section.');
+
+  for (const task of parsed.activeTasks) {
+    if (task.status === 'In Progress') {
+      if (!task.currentPhase) say('error', `In Progress task '${task.title}' lacks Current phase.`);
+      if (!task.hasIntent) say('error', `In Progress task '${task.title}' lacks Intent.`);
+      if (!task.hasTodo) say('error', `In Progress task '${task.title}' lacks Current todo.`);
+      if (!task.hasResume) say('error', `In Progress task '${task.title}' lacks Resume next.`);
+      if (task.level === '2' || task.level === '3') {
+        if (!task.hasPlan) say('warning', `Level ${task.level} task '${task.title}' lacks Plan.`);
+        if (!task.hasChanges) say('warning', `Level ${task.level} task '${task.title}' lacks Changes.`);
+        if (!task.hasPrerequisites) say('warning', `Level ${task.level} task '${task.title}' lacks Prerequisites.`);
+      }
+    }
+    if (task.status === 'Blocked') {
+      if (!task.hasBlockedBy) say('error', `Blocked task '${task.title}' lacks Blocked by.`);
+      if (!task.hasResume) say('error', `Blocked task '${task.title}' lacks Resume next.`);
+    }
+    if (task.status === 'Done' || task.status === 'Completed') {
+      if (!task.hasCloseSummary) say('warning', `Completed task '${task.title}' is still under Active and lacks Close summary. Move it to ## Completed when closing.`);
+    }
+    if (task.lineCount > 100) say('warning', `Task '${task.title}' has more than 100 lines.`);
+
+    if (task.hasPlan) {
+      if (task.planItems.length === 0) say('warning', `Task '${task.title}' has Plan but no structured plan items.`);
+      const doingItems = task.planItems.filter((item) => item.status === 'doing');
+      if (doingItems.length > 1) say('warning', `Task '${task.title}' has more than one doing Plan item.`);
+      const ids = new Set<string>();
+      for (const item of task.planItems) {
+        if (ids.has(item.id)) say('warning', `Task '${task.title}' repeats Plan item id ${item.id}.`);
+        ids.add(item.id);
+        if (!knownPlanStatuses.has(item.status as PlanStatus)) say('warning', `Task '${task.title}' has unknown Plan status '${item.status}' on ${item.id}.`);
+        if (planItemNeedsReason(item) && !planItemHasReason(item)) say('warning', `Task '${task.title}' Plan item ${item.id} is ${item.status} but lacks a reason.`);
+      }
+      const currentRefs = task.currentTodoItems.flatMap(extractPlanRefs);
+      if (task.currentTodoItems.length > 0 && currentRefs.length === 0) say('warning', `Task '${task.title}' Current todo does not reference a Plan item id.`);
+      for (const ref of currentRefs) {
+        if (!ids.has(ref)) say('warning', `Task '${task.title}' Current todo references missing Plan item ${ref}.`);
+      }
+    }
+  }
+
+  if (parsed.backlogItems > 10) say('warning', 'Backlog / Future contains more than 10 items.');
+  if (parsed.activeTasks.length > 1) say('warning', 'More than one Active task; include priority, blocker state, and Resume next if this is intentional.');
+
+  say('info', `Active tasks: ${parsed.activeTasks.length}`);
+  say('info', `Backlog items: ${parsed.backlogItems}`);
+  say('info', `Completed tasks: ${parsed.completedItems}`);
 
   let ledgerMtime = 0;
   try {
     ledgerMtime = Math.floor(fs.statSync(ledger).mtimeMs / 1000);
-    sayInfo(`Ledger modified: ${formatLocalTimestamp(ledgerMtime)}`);
+    say('info', `Ledger modified: ${formatLocalTimestamp(ledgerMtime)}`);
   } catch {
     ledgerMtime = 0;
   }
@@ -545,25 +679,22 @@ function cmdDoctor(): void {
     const latest = spawnSync('git', ['-C', targetRoot, 'log', '-1', '--format=%ct'], { encoding: 'utf8' });
     const commitTime = Number(latest.stdout.trim());
     if (latest.status === 0 && Number.isFinite(commitTime) && commitTime > 0) {
-      sayInfo(`Latest git commit: ${formatLocalTimestamp(commitTime)}`);
-      if (ledgerMtime > 0 && ledgerMtime < commitTime) sayWarning('Ledger modified time is older than latest git commit.');
+      say('info', `Latest git commit: ${formatLocalTimestamp(commitTime)}`);
+      if (ledgerMtime > 0 && ledgerMtime < commitTime) say('warning', 'Ledger modified time is older than latest git commit.');
     }
   }
 
-  sayInfo(`Hooks: ${hookStatusValue()}`);
-  if (errorCount > 0) {
-    out.push(`doctor finished with ${errorCount} error(s), ${warningCount} warning(s).`);
-    process.exitCode = 1;
-  } else {
-    out.push(`doctor finished with 0 errors, ${warningCount} warning(s).`);
-  }
-  console.log(out.join('\n'));
+  say('info', `Hooks: ${hookStatusValue()}`);
+  return { diagnostics, errorCount, warningCount, ledgerMtime };
 }
 
-function cmdList(): void {
+function cmdDoctor(): void {
   const ledger = ledgerPath();
   if (!fs.existsSync(ledger)) {
-    console.error('No .claude/WORKFLOW.md found; no tasks to list.');
+    const diagnostics: DoctorDiagnostic[] = [{ severity: 'error', message: '.claude/WORKFLOW.md is missing.' }];
+    if (args.json) console.log(JSON.stringify({ ok: false, errors: 1, warnings: 0, diagnostics }, null, 2));
+    else console.log(['ERROR: .claude/WORKFLOW.md is missing.', 'doctor finished with 1 error(s), 0 warning(s).'].join('\n'));
+    process.exitCode = 1;
     return;
   }
 
@@ -571,110 +702,131 @@ function cmdList(): void {
   try {
     text = fs.readFileSync(ledger, 'utf8');
   } catch {
+    const diagnostics: DoctorDiagnostic[] = [{ severity: 'error', message: '.claude/WORKFLOW.md exists but cannot be read.' }];
+    if (args.json) console.log(JSON.stringify({ ok: false, errors: 1, warnings: 0, diagnostics }, null, 2));
+    else console.log(['ERROR: .claude/WORKFLOW.md exists but cannot be read.', 'doctor finished with 1 error(s), 0 warning(s).'].join('\n'));
+    process.exitCode = 1;
+    return;
+  }
+
+  const parsed = parseLedgerText(text);
+  const result = collectDoctorDiagnostics(parsed, ledger);
+  const ok = result.errorCount === 0;
+  if (args.json) {
+    console.log(JSON.stringify({
+      ok,
+      errors: result.errorCount,
+      warnings: result.warningCount,
+      diagnostics: result.diagnostics,
+      summary: {
+        activeTasks: parsed.activeTasks.length,
+        backlogItems: parsed.backlogItems,
+        completedTasks: parsed.completedItems,
+        ledgerMtime: result.ledgerMtime,
+        hooks: hookStatusValue(),
+      },
+    }, null, 2));
+  } else {
+    const out = result.diagnostics.map((diagnostic) => `${diagnostic.severity.toUpperCase()}: ${diagnostic.message}`);
+    out.push(ok ? `doctor finished with 0 errors, ${result.warningCount} warning(s).` : `doctor finished with ${result.errorCount} error(s), ${result.warningCount} warning(s).`);
+    console.log(out.join('\n'));
+  }
+  if (!ok) process.exitCode = 1;
+}
+
+function taskListJson(task: LedgerTask) {
+  return {
+    title: task.title,
+    status: task.status,
+    level: task.level,
+    currentPhase: task.currentPhase,
+    resumeNext: task.resumeNext,
+    currentTodo: task.currentTodoItems,
+    plan: {
+      summary: planSummary(task.planItems),
+      next: nextPlanItem(task),
+      items: task.planItems,
+    },
+  };
+}
+
+function cmdList(): void {
+  const loaded = readLedgerForCommand();
+  if (!loaded) {
+    if (args.json) console.log(JSON.stringify({ active: [], backlogItems: 0, completedTasks: 0 }, null, 2));
+    else console.error('No .claude/WORKFLOW.md found; no tasks to list.');
+    return;
+  }
+
+  let parsed: ParsedLedger;
+  try {
+    parsed = parseLedgerText(loaded.text);
+  } catch {
     console.error('error: .claude/WORKFLOW.md exists but cannot be read.');
     process.exitCode = 1;
     return;
   }
 
-  const lines = text.split(/\r?\n/);
-  const out = ['Active:'];
-  let inActive = false;
-  let inBacklog = false;
-  let inCompleted = false;
-  let inResume = false;
-  let backlogItems = 0;
-  let completedItems = 0;
-  let currentTask = '';
-  let status = '';
-  let level = '';
-  let currentPhase = '';
-  let resumeNext = '';
-
-  const printTask = () => {
-    if (!currentTask) return;
-    let meta = '';
-    if (level) meta = `[Level ${level}]`;
-    if (status) meta = `${meta} ${status}`;
-    out.push(`- ${currentTask} ${meta}`);
-    if (currentPhase) out.push(`  Current phase: ${currentPhase}`);
-    if (resumeNext) out.push(`  Resume next: ${resumeNext}`);
-  };
-
-  for (const line of lines) {
-    if (line === '## Active') {
-      inActive = true;
-      inBacklog = false;
-      inCompleted = false;
-      inResume = false;
-      continue;
-    }
-    if (line === '## Backlog / Future') {
-      printTask();
-      currentTask = '';
-      inActive = false;
-      inBacklog = true;
-      inCompleted = false;
-      inResume = false;
-      continue;
-    }
-    if (line === '## Completed') {
-      printTask();
-      currentTask = '';
-      inActive = false;
-      inBacklog = false;
-      inCompleted = true;
-      inResume = false;
-      continue;
-    }
-    if (line.startsWith('## ')) {
-      printTask();
-      currentTask = '';
-      inActive = false;
-      inBacklog = false;
-      inCompleted = false;
-      inResume = false;
-    }
-
-    if (inActive) {
-      const titleMatch = line.match(/^###\s+(.+)/);
-      if (titleMatch) {
-        printTask();
-        currentTask = titleMatch[1];
-        status = '';
-        level = '';
-        currentPhase = '';
-        resumeNext = '';
-        inResume = false;
-      } else {
-        const statusMatch = line.match(/^Status:\s*(.+)/);
-        const levelMatch = line.match(/^Level:\s*([0-3])/);
-        const currentMatch = line.match(/^Current\s+phase:\s*(.+)/);
-        if (statusMatch && !status) {
-          status = statusMatch[1];
-          inResume = false;
-        } else if (levelMatch) {
-          level = levelMatch[1];
-          inResume = false;
-        } else if (currentMatch) {
-          currentPhase = currentMatch[1];
-          inResume = false;
-        } else if (/^Resume\s+next:/.test(line)) {
-          inResume = true;
-        } else if (inResume && /^-\s+(.+)/.test(line)) {
-          if (!resumeNext) resumeNext = line.replace(/^-\s+/, '');
-        } else if (line.trim()) {
-          inResume = false;
-        }
-      }
-    } else if (inBacklog && /^-\s+(\[[ xX]\]\s+)?/.test(line)) {
-      backlogItems += 1;
-    } else if (inCompleted && /^###\s+/.test(line)) {
-      completedItems += 1;
-    }
+  if (args.json) {
+    console.log(JSON.stringify({
+      active: parsed.activeTasks.map(taskListJson),
+      backlogItems: parsed.backlogItems,
+      completedTasks: parsed.completedItems,
+    }, null, 2));
+    return;
   }
-  printTask();
-  out.push('', 'Backlog / Future:', `- ${backlogItems} items`, '', 'Completed:', `- ${completedItems} items`);
+
+  const out = ['Active:'];
+  for (const task of parsed.activeTasks) {
+    let meta = '';
+    if (task.level) meta = `[Level ${task.level}]`;
+    if (task.status) meta = `${meta} ${task.status}`.trim();
+    out.push(`- ${task.title}${meta ? ` ${meta}` : ''}`);
+    if (task.currentPhase) out.push(`  Current phase: ${task.currentPhase}`);
+    if (task.planItems.length > 0) {
+      const summary = planSummary(task.planItems);
+      const summaryText = Object.keys(summary).sort().map((status) => `${status}:${summary[status]}`).join(', ');
+      out.push(`  Plan: ${summaryText}`);
+      const next = nextPlanItem(task);
+      if (next) out.push(`  Next plan item: ${next.id} [${next.status}] ${next.title}`);
+    }
+    if (task.resumeNext) out.push(`  Resume next: ${task.resumeNext}`);
+  }
+  out.push('', 'Backlog / Future:', `- ${parsed.backlogItems} items`, '', 'Completed:', `- ${parsed.completedItems} items`);
   console.log(out.join('\n'));
+}
+
+function cmdNext(): void {
+  const loaded = readLedgerForCommand();
+  if (!loaded) {
+    if (args.json) console.log(JSON.stringify({ task: null, next: null }, null, 2));
+    else console.error('No .claude/WORKFLOW.md found; no next action.');
+    return;
+  }
+
+  const parsed = parseLedgerText(loaded.text);
+  const task = parsed.activeTasks[0] || null;
+  const planItem = task ? nextPlanItem(task) : null;
+  const next = task ? {
+    task: task.title,
+    currentPhase: task.currentPhase,
+    planItem,
+    resumeNext: task.resumeNext,
+  } : null;
+
+  if (args.json) {
+    console.log(JSON.stringify({ task: task ? taskListJson(task) : null, next }, null, 2));
+    return;
+  }
+
+  if (!task) {
+    console.log('No Active task.');
+    return;
+  }
+  console.log(`Task: ${task.title}`);
+  if (task.currentPhase) console.log(`Current phase: ${task.currentPhase}`);
+  if (planItem) console.log(`Next plan item: ${planItem.id} [${planItem.status}] ${planItem.title}`);
+  if (task.resumeNext) console.log(`Resume next: ${task.resumeNext}`);
 }
 
 function cmdHooksStatus(): void {
@@ -769,6 +921,8 @@ async function runCommand(argv: string[]): Promise<void> {
     cmdDoctor();
   } else if (command === 'list') {
     cmdList();
+  } else if (command === 'next') {
+    cmdNext();
   } else if (command === 'hooks') {
     const subcommand = argv[1] || 'status';
     if (subcommand === 'status') cmdHooksStatus();
